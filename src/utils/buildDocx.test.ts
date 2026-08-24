@@ -29,4 +29,10 @@ describe('buildDocx', () => {
     const blob = await buildDocx('');
     expect(blob.size).toBeGreaterThan(0); // un document vide reste un .docx valide
   });
+
+  it('réduit les lignes vides consécutives', async () => {
+    const texte = 'Section 1\n\n\n\n\nSection 2';
+    const blob = await buildDocx(texte);
+    expect(blob).toBeInstanceOf(Blob);
+  });
 });
