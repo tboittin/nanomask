@@ -25,6 +25,8 @@ interface UseRevueReturn {
   ajouterTag: (type: string, valeur: string) => void;
   mettreSurbrillance: (tag: string | null) => void;
   mappingFinal: Mapping;
+  mappingModifie: boolean;
+  reinitialiserMapping: () => void;
 }
 
 export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRevueReturn {
@@ -132,6 +134,15 @@ export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRev
     setTagSurbrillance(prev => prev === tag ? null : tag);
   }, []);
 
+  const mappingModifie = useMemo(
+    () => JSON.stringify(mapping) !== JSON.stringify(mappingInitial),
+    [mapping, mappingInitial],
+  );
+
+  const reinitialiserMapping = useCallback(() => {
+    setMapping({ ...mappingInitial });
+  }, [mappingInitial]);
+
   return {
     tags,
     textePseudonymise,
@@ -144,5 +155,7 @@ export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRev
     ajouterTag,
     mettreSurbrillance,
     mappingFinal: mapping,
+    mappingModifie,
+    reinitialiserMapping,
   };
 }

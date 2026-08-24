@@ -14,6 +14,7 @@ type Etape = 'upload' | 'revue';
 
 function App() {
   const [onglet, setOnglet] = useState<Onglet>('anonymiser');
+  const [messageSucces, setMessageSucces] = useState<string | null>(null);
   const {
     fichier, texte, chargement, erreur,
     cle, erreurCle, nomFichierCle,
@@ -44,20 +45,23 @@ function App() {
   }, [texte, cle]);
 
   const handleValider = useCallback(
-    async (mappingFinal: Mapping, textePseudonymise: string) => {
-      const nomBase = fichier?.name.replace(/\.docx$/i, '') ?? 'rapport';
+      async (mappingFinal: Mapping, textePseudonymise: string) => {
+        const nomBase = fichier?.name.replace(/\\.docx$/i, '') ?? 'rapport';
 
-      // Télécharger le .docx pseudonymisé
-      const blobDocx = await buildDocx(textePseudonymise);
-      declencherTelechargement(blobDocx, `${nomBase}-pseudonymise.docx`);
+        // Télécharger le .docx pseudonymisé
+        const blobDocx = await buildDocx(textePseudonymise);
+        declencherTelechargement(blobDocx, `${nomBase}-pseudonymise.docx`);
 
-      // Télécharger la clé .key.json
-      const contenuCle = genererCleJson(mappingFinal);
-      const blobCle = new Blob([contenuCle], { type: 'application/json' });
-      declencherTelechargement(blobCle, `${nomBase}.key.json`);
-    },
-    [fichier],
-  );
+        // Télécharger la clé .key.json
+        const contenuCle = genererCleJson(mappingFinal);
+        const blobCle = new Blob([contenuCle], { type: 'application/json' });
+        declencherTelechargement(blobCle, `${nomBase}.key.json`);
+
+        setMessageSucces('Fichiers téléchargés avec succès ✓');
+        setTimeout(() => setMessageSucces(null), 5000);
+      },
+      [fichier],
+    );
 
   const handleRetour = useCallback(() => {
     reinitialiser();
@@ -99,6 +103,7 @@ function App() {
             key={o}
             onClick={() => {
               setOnglet(o);
+              setMessageSucces(null);
               if (o !== 'anonymiser') {
                 reinitialiser();
                 setMapping(null);
@@ -121,6 +126,24 @@ function App() {
           </button>
         ))}
       </nav>
+
+      {messageSucces && (
+        <div
+          role="status"
+          style={{
+            padding: 'var(--espacement-sm) var(--espacement-md)',
+            background: '#f0fdf4',
+            border: '1px solid var(--couleur-succes)',
+            borderRadius: 'var(--rayon-bordure)',
+            color: '#166534',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            textAlign: 'center',
+          }}
+        >
+          {messageSucces}
+        </div>
+      )}
 
       {onglet === 'anonymiser' && etape === 'upload' && (
         <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>

@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { PseudoTableau } from './PseudoTableau';
 import { TexteApercu } from './TexteApercu';
+import { PopupConfirmation } from './PopupConfirmation';
 import { useRevue } from '../hooks/useRevue';
 import type { Mapping } from '../utils/mapping';
 
@@ -15,6 +17,25 @@ export function EcranRevue({
   onValider,
 }: EcranRevueProps) {
   const revue = useRevue(texteOriginal, mappingInitial);
+  const [popupOuverte, setPopupOuverte] = useState(false);
+
+  const handleClicValider = () => {
+    if (revue.mappingModifie) {
+      setPopupOuverte(true);
+    } else {
+      onValider(revue.mappingFinal, revue.textePseudonymise);
+    }
+  };
+
+  const handleContinuer = () => {
+    setPopupOuverte(false);
+    onValider(revue.mappingFinal, revue.textePseudonymise);
+  };
+
+  const handleRelancer = () => {
+    setPopupOuverte(false);
+    revue.reinitialiserMapping();
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
@@ -83,7 +104,7 @@ export function EcranRevue({
       {/* Bouton validation */}
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <button
-          onClick={() => onValider(revue.mappingFinal, revue.textePseudonymise)}
+          onClick={handleClicValider}
           style={{
             padding: 'var(--espacement-sm) var(--espacement-lg)',
             background: 'var(--couleur-primaire)',
@@ -98,6 +119,17 @@ export function EcranRevue({
           Valider et télécharger
         </button>
       </div>
+
+      {popupOuverte && (
+        <PopupConfirmation
+          titre="Modifications détectées"
+          message="Vous avez modifié le mapping. Voulez-vous relancer l'analyse depuis le rapport d'origine, ou continuer avec les données actuelles ?"
+          boutonConfirmer="Continuer"
+          boutonAnnuler="Relancer l'analyse"
+          onConfirmer={handleContinuer}
+          onAnnuler={handleRelancer}
+        />
+      )}
     </div>
   );
 }

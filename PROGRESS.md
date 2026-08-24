@@ -2,7 +2,7 @@
 
 > Document de suivi du projet. Met à jour au fil de l'avancement.
 > Chaque phase se termine par une intégration dans App.tsx — le projet est **testable** à la fin de chaque phase (`pnpm dev`).
-> Statut global : 🟢 **Phase 7 terminée — pipeline complet upload → analyse → revue → téléchargement + restauration**
+> Statut global : 🟢 **Phase 8 terminée — interface complète (navigation, popup de confirmation, message de succès)**
 
 ---
 
@@ -146,12 +146,12 @@ Après cette phase : l'interface est complète avec navigation, popups, états.
 
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
-| 8.1 | Navigation à onglets : Anonymiser / Restaurer | 🔴 | |
-| 8.2 | Popup de confirmation si texte modifié manuellement | 🔴 | |
-| 8.3 | Messages d'erreur / état vide / chargement dans App.tsx | 🔴 | |
-| 8.4 | Tests : navigation, popup, états | 🔴 | |
+| 8.1 | Navigation à onglets : Anonymiser / Restaurer | 🟢 | Fait en phase 7 |
+| 8.2 | Popup de confirmation si mapping modifié | 🟢 | `PopupConfirmation` composant + intégration dans `EcranRevue` |
+| 8.3 | Messages d'erreur / état vide / chargement dans App.tsx | 🟢 | Message de succès vert après téléchargement, disparaît après 5s |
+| 8.4 | Tests : navigation, popup, états | 🟢 | 7 tests PopupConfirmation + 3 tests popup EcranRevue + 1 test succès App = 11 nouveaux tests |
 
-**Testable :** 🔴
+**Testable :** 🟢
 
 ---
 
@@ -188,5 +188,5 @@ Après cette phase : l'interface est complète avec navigation, popups, états.
 | Phase 5 — Revue interactive | 🟢 |
 | Phase 6 — Reconstruction .docx | 🟢 |
 | Phase 7 — Restauration | 🟢 |
-| Phase 8 — Navigation/UI avancée | 🔴 |
+| Phase 8 — Navigation/UI avancée | 🟢 |
 | Phase 9 — Finitions | 🔴 |

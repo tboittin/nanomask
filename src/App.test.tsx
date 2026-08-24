@@ -146,6 +146,28 @@ describe('App', () => {
     expect(URL.createObjectURL).toHaveBeenCalledTimes(2);
   });
 
+  it('affiche un message de succès après téléchargement', async () => {
+    extractRawTextMock.mockResolvedValue({
+      value: 'Contact : test@exemple.fr',
+      messages: [],
+    });
+
+    render(<App />);
+
+    const inputs = screen.getAllByTestId('input-fichier');
+    fireEvent.change(inputs[0], { target: { files: [creerFichier('mon-rapport.docx')] } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Valider et télécharger')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Valider et télécharger'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Fichiers téléchargés avec succès ✓')).toBeInTheDocument();
+    });
+  });
+
   it('affiche les onglets de navigation', () => {
     render(<App />);
     expect(screen.getByText('🔒 Anonymiser')).toBeInTheDocument();
