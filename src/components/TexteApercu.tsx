@@ -7,6 +7,8 @@ interface TexteApercuProps {
   tagSurbrillance?: string | null;
   surlignerTags?: boolean;
   surlignerValeurs?: boolean;
+  containerRef?: React.Ref<HTMLDivElement>;
+  onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
 }
 
 export function TexteApercu({
@@ -16,6 +18,8 @@ export function TexteApercu({
   tagSurbrillance = null,
   surlignerTags = false,
   surlignerValeurs = false,
+  containerRef,
+  onScroll,
 }: TexteApercuProps) {
   const segments = useMemo(() => {
     if (surlignerTags) {
@@ -33,6 +37,8 @@ export function TexteApercu({
         {titre}
       </h4>
       <div
+        ref={containerRef}
+        onScroll={onScroll}
         style={{
           background: 'var(--couleur-surface)',
           border: '1px solid var(--couleur-bordure)',

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { PseudoTableau } from './PseudoTableau';
 import { TexteApercu } from './TexteApercu';
 import { PopupConfirmation } from './PopupConfirmation';
@@ -18,6 +18,31 @@ export function EcranRevue({
 }: EcranRevueProps) {
   const revue = useRevue(texteOriginal, mappingInitial);
   const [popupOuverte, setPopupOuverte] = useState(false);
+  const [syncScroll, setSyncScroll] = useState(true);
+
+  const refPseudonymise = useRef<HTMLDivElement>(null);
+  const refLisible = useRef<HTMLDivElement>(null);
+  const syncing = useRef(false); // Évite la boucle de scroll
+
+  const handleScroll = useCallback(
+    (source: 'pseudo' | 'lisible') =>
+      (e: React.UIEvent<HTMLDivElement>) => {
+        if (!syncScroll || syncing.current) return;
+        syncing.current = true;
+
+        const sourceEl = e.currentTarget;
+        const ratio = sourceEl.scrollTop / (sourceEl.scrollHeight - sourceEl.clientHeight || 1);
+
+        const cible =
+          source === 'pseudo' ? refLisible.current : refPseudonymise.current;
+        if (cible) {
+          cible.scrollTop = ratio * (cible.scrollHeight - cible.clientHeight || 1);
+        }
+
+        requestAnimationFrame(() => { syncing.current = false; });
+      },
+    [syncScroll],
+  );
 
   const handleClicValider = () => {
     if (revue.mappingModifie) {
@@ -80,6 +105,8 @@ export function EcranRevue({
               mapping={revue.mappingFinal}
               tagSurbrillance={revue.tagSurbrillance}
               surlignerTags
+              containerRef={refPseudonymise}
+              onScroll={handleScroll('pseudo')}
             />
           </div>
           <div
@@ -96,13 +123,35 @@ export function EcranRevue({
               mapping={revue.mappingFinal}
               tagSurbrillance={revue.tagSurbrillance}
               surlignerValeurs
+              containerRef={refLisible}
+              onScroll={handleScroll('lisible')}
             />
           </div>
         </div>
       </div>
 
-      {/* Bouton validation */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      {/* Barre d'outils : scroll synchronisé + validation */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--espacement-sm)',
+            fontSize: '0.875rem',
+            color: 'var(--couleur-texte-secondaire)',
+            cursor: 'pointer',
+            userSelect: 'none',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={syncScroll}
+            onChange={(e) => setSyncScroll(e.target.checked)}
+            style={{ cursor: 'pointer' }}
+          />
+          Scroll synchronisé
+        </label>
+
         <button
           onClick={handleClicValider}
           style={{
