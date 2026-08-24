@@ -1,7 +1,8 @@
 # PROGRESS.md — NanoMask
 
 > Document de suivi du projet. Met à jour au fil de l'avancement.
-> Statut global : 🟢 **Phase 5 terminée**
+> Chaque phase se termine par une intégration dans App.tsx — le projet est **testable** à la fin de chaque phase (`pnpm dev`).
+> Statut global : 🟢 **Phase 5 terminée — pipeline complet testable**
 
 ---
 
@@ -18,75 +19,113 @@
 
 ## Phase 1 — Fondations du projet
 
+Après cette phase : `pnpm dev` affiche un titre + sous-titre.
+
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
-| 1.1 | Initialiser le monorepo pnpm (Node ≥ 18, `.npmrc` node-linker=hoisted) | 🟢 | pnpm 9.15.9, Node 20.20.2 |\n| 1.2 | Configurer Vite + React 18 + TypeScript strict | 🟢 | Vite 6.4.3, React 18.3, TS 5.7 |\n| 1.3 | Configurer vitest + @testing-library/react | 🟢 | vitest 2.1.9, jsdom |\n| 1.4 | Configurer ESLint + Prettier (conventions françaises) | 🔴 | Reporté — pas bloquant |\n| 1.5 | Vérifier `tsc --noEmit` et `npm test` passent à vide | 🟢 | 2 tests passent, typecheck OK |\n| 1.6 | Créer la structure de dossiers (`src/`, `src/components/`, `src/utils/`, `src/hooks/`, `public/`) | 🟢 | `src/` + sous-dossiers créés |
+| 1.1 | Initialiser le monorepo pnpm (Node ≥ 18, `.npmrc` node-linker=hoisted) | 🟢 | pnpm 9.15.9, Node 20.20.2 |
+| 1.2 | Configurer Vite + React 18 + TypeScript strict | 🟢 | Vite 6.4.3, React 18.3, TS 5.7 |
+| 1.3 | Configurer vitest + @testing-library/react | 🟢 | vitest 2.1.9, jsdom |
+| 1.4 | Configurer ESLint + Prettier (conventions françaises) | 🔴 | Reporté — pas bloquant |
+| 1.5 | Vérifier `tsc --noEmit` et `npm test` passent à vide | 🟢 | 2 tests passent, typecheck OK |
+| 1.6 | Créer la structure de dossiers | 🟢 | `src/` + sous-dossiers créés |
+
+**Testable :** ✅ `pnpm dev` → page "NanoMask"
 
 ---
 
-## Phase 2 — Lecture et extraction .docx
+## Phase 2 — Upload et extraction .docx
+
+Après cette phase : on peut uploader un fichier `.docx` et voir le texte extrait dans la page.
 
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
-| 2.1 | Installer `mammoth` | 🟢 | `messages` (type), polyfill Blob.arrayBuffer jsdom |\n| 2.2 | Créer le hook `useDocxUpload()` — upload + extraction texte brut | 🟢 | 6 tests |\n| 2.3 | Encapsuler dans un composant `FileDropZone` (glisser-déposer + sélecteur) | 🟢 | label natif au lieu de div+onClick |\n| 2.4 | Tests : upload fichier, extraction texte, erreur fichier invalide | 🟢 | 16 tests passent |
+| 2.1 | Installer `mammoth` | 🟢 | |
+| 2.2 | Créer le hook `useDocxUpload()` — upload + extraction texte brut | 🟢 | 6 tests |
+| 2.3 | Créer le composant `FileDropZone` (glisser-déposer + sélecteur) | 🟢 | 8 tests |
+| 2.4 | **Intégration :** connecter `FileDropZone` + `useDocxUpload` dans `App.tsx` | 🟢 | useEffect + switch d'étapes |
+| 2.5 | Tests : upload fichier, extraction, erreurs | 🟢 | 16 tests passent |
+
+**Testable :** 🟢 upload → analyse → revue complet
 
 ---
 
 ## Phase 3 — Pipeline de détection regex
 
+Après cette phase : l'upload détecte automatiquement les PII et affiche le résultat.
+
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
-| 3.1 | Implémenter les 9 règles regex (email, tel, ADELI, NIR, SIRET, IBAN, IP, URL, CB) | 🟢 | 10 tests regex |
-| 3.2 | Fonction `analyzeText(text: string): Detection[]` avec positions et types | 🟢 | 4 tests |
-| 3.3 | Déduplication : même valeur → même tag, variantes regroupées | 🟢 | testée dans analyse.test |
-| 3.4 | Résolution de sous-chaîne (ex: "rue Gambetta" dans "15 rue Gambetta") | 🟢 | 2 tests |
-| 3.5 | Support clé `.key.json` existante (mapping optionnel en entrée) | 🟢 | via chargerCleJson |
-| 3.6 | Tests : chaque regex sur des cas réels (valides + limites + faux positifs) | 🟢 | 10 tests regex |
-| 3.7 | Tests : déduplication, conflit de sous-chaîne, chargement clé existante | 🟢 | 8 tests analyse |
+| 3.1 | Implémenter les 9 règles regex (email, tel, ADELI, NIR, SIRET, IBAN, IP, URL, CB) | 🟢 | 10 tests |
+| 3.2 | Fonction `analyserTexte()` avec positions et types | 🟢 | 4 tests |
+| 3.3 | Déduplication : même valeur → même tag, variantes regroupées | 🟢 | |
+| 3.4 | Résolution de sous-chaîne | 🟢 | 2 tests |
+| 3.5 | Support clé `.key.json` existante | 🟢 | via `chargerCleJson` |
+| 3.6 | **Intégration :** lancer l'analyse automatiquement après upload, afficher les détections | 🟢 | useEffect dans App.tsx |
+| 3.7 | Tests : chaque regex, déduplication, sous-chaîne | 🟢 | 18 tests |
+
+**Testable :** 🟢
 
 ---
 
 ## Phase 4 — Mapping et tags
 
+Après cette phase : le texte pseudonymisé est affiché en regard du texte original.
+
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
-| 4.1 | Génération des tags sémantiques (`[PERSONNE]`, `[TELEPHONE]`…) avec compteurs | 🟢 | 3 tests |
-| 4.2 | Fonction `applyMapping(text: string, map: Map): string` | 🟢 | 2 tests |
-| 4.3 | Fonction `reverseMapping(text: string, map: Map): string` (restauration) | 🟢 | 1 test |
-| 4.4 | Génération du fichier `.key.json` | 🟢 | round-trip testé |
-| 4.5 | Tests : application, restauration, clé invalide/corrompue | 🟢 | 8 tests mapping |
+| 4.1 | Génération des tags sémantiques (`[PERSONNE]`, `[TELEPHONE]`…) | 🟢 | 3 tests |
+| 4.2 | Fonction `appliquerMapping()` | 🟢 | 2 tests |
+| 4.3 | Fonction `restaurerTexte()` | 🟢 | 1 test |
+| 4.4 | Génération et chargement du fichier `.key.json` | 🟢 | round-trip testé |
+| 4.5 | **Intégration :** appliquer le mapping détecté, afficher texte pseudonymisé | 🟢 | genererMapping dans le flux |
+| 4.6 | Tests : application, restauration, clé | 🟢 | 8 tests |
+
+**Testable :** 🟢
 
 ---
 
 ## Phase 5 — Écran de revue interactive
 
+Après cette phase : le pipeline complet upload → analyse → revue est fonctionnel dans le navigateur.
+
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
-| 5.1 | Layout split : tableau (gauche) / aperçus texte (droite) | 🟢 | grid 2 colonnes |
-| 5.2 | **Volet gauche** : tableau des tags avec valeurs associées | 🟢 | PseudoTableau |
-| 5.3 | Code couleur : vert (nouveau), blanc (existant), rouge (conflit), gris (vide) | 🟢 | fonction couleurTag |
-| 5.4 | Renommer un tag (double-clic), ajouter/éditer/supprimer une valeur | 🟢 | double-clic + inputs |
-| 5.5 | Bouton "+ Ajouter un pseudo" (tag + valeur manuelle, typage libre) | 🟢 | formulaire déroulant |
-| 5.6 | **Volet droit haut** : texte pseudonymisé avec surbrillance des tags | 🟢 | TexteApercu (surlignerTags) |
-| 5.7 | **Volet droit bas** : texte lisible avec surbrillance des valeurs | 🟢 | TexteApercu (surlignerValeurs) |
-| 5.8 | Highlight croisé : clic tag → surbrillance bleue dans les deux textes | 🟢 | useRevue.mettreSurbrillance |
-| 5.9 | Détection des conflits (même valeur dans deux tags, sous-chaîne) | 🟢 | calculée dans useRevue |
-| 5.10 | Tests : clic sur tag, ajout manuel, conflit affiché, rendu | 🟢 | 24 tests Phase 5 |
+| 5.1 | Layout split : tableau (gauche) / aperçus texte (droite) | 🟢 | EcranRevue |
+| 5.2 | Tableau des tags avec valeurs associées (PseudoTableau) | 🟢 | |
+| 5.3 | Code couleur : vert (nouveau), blanc (existant), rouge (conflit), gris (vide) | 🟢 | |
+| 5.4 | Renommer (double-clic), ajouter/éditer/supprimer une valeur | 🟢 | |
+| 5.5 | Bouton "+ Ajouter un pseudo" | 🟢 | |
+| 5.6 | Texte pseudonymisé avec surbrillance des tags | 🟢 | |
+| 5.7 | Texte lisible avec surbrillance des valeurs | 🟢 | |
+| 5.8 | Highlight croisé : clic tag → surbrillance bleue | 🟢 | |
+| 5.9 | Détection des conflits (doublon, sous-chaîne) | 🟢 | |
+| 5.10 | **Intégration :** pipeline complet upload → analyse → revue dans App.tsx | 🟢 | useRef + useEffect, 4 tests App |
+| 5.11 | Tests : rendu, clic, ajout manuel, conflit | 🟢 | 24 tests |
+
+**Testable :** 🟢
 
 ---
 
-## Phase 6 — Reconstruction .docx
+## Phase 6 — Reconstruction et téléchargement
+
+Après cette phase : on peut pseudonymiser un rapport, télécharger le .docx pseudonymisé + la clé .key.json.
 
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
 | 6.1 | Installer `docx` (npm) | 🔴 | |
-| 6.2 | Fonction `buildDocx(text: string): Blob` avec `docx.Document` + `Packer.toBlob()` | 🔴 | |
-| 6.3 | Téléchargement simultané du `.docx` pseudonymisé + `.key.json` | 🔴 | |
-| 6.4 | Tests : vérifier que le blob généré est un .docx valide | 🔴 | |
+| 6.2 | Fonction `buildDocx(text: string): Blob` | 🔴 | |
+| 6.3 | Téléchargement simultané .docx + .key.json | 🔴 | |
+| 6.4 | **Intégration :** brancher le téléchargement au bouton "Valider et télécharger" | 🔴 | |
+| 6.5 | Tests : blob .docx valide, round-trip | 🔴 | |
+
+**Testable :** 🔴
 
 ---
 
-## Phase 7 — Onglet Restauration
+## Phase 7 — Restauration
+
+Après cette phase : on peut restaurer un rapport modifié avec sa clé.
 
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
@@ -94,19 +133,25 @@
 | 7.2 | Upload de la clé `.key.json` | 🔴 | |
 | 7.3 | Pipeline de remplacement `[TAG]` → valeur d'origine | 🔴 | |
 | 7.4 | Téléchargement du rapport restauré | 🔴 | |
-| 7.5 | Tests : round-trip complet (anonymiser → restaurer) | 🔴 | |
+| 7.5 | **Intégration :** onglet "Restaurer" dans App.tsx | 🔴 | |
+| 7.6 | Tests : round-trip complet | 🔴 | |
+
+**Testable :** 🔴
 
 ---
 
 ## Phase 8 — Navigation et UI globale
 
+Après cette phase : l'interface est complète avec navigation, popups, états.
+
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
 | 8.1 | Navigation à onglets : Anonymiser / Restaurer | 🔴 | |
-| 8.2 | Bouton global "Valider et télécharger" (bas à droite) | 🔴 | |
-| 8.3 | Popup de confirmation si texte modifié manuellement avant validation | 🔴 | |
-| 8.4 | Messages d'erreur / état vide / chargement | 🔴 | |
-| 8.5 | Tests : navigation, états, popup | 🔴 | |
+| 8.2 | Popup de confirmation si texte modifié manuellement | 🔴 | |
+| 8.3 | Messages d'erreur / état vide / chargement dans App.tsx | 🔴 | |
+| 8.4 | Tests : navigation, popup, états | 🔴 | |
+
+**Testable :** 🔴
 
 ---
 
@@ -115,7 +160,7 @@
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
 | 9.1 | Audit de sécurité : zéro donnée sortante vérifié | 🔴 | |
-| 9.2 | Test utilisateur complet : upload → revue → téléchargement → upload restauration | 🔴 | |
+| 9.2 | Test utilisateur complet : upload → revue → téléchargement → restauration | 🔴 | |
 | 9.3 | Vérifier couverture de test (viser ≥ 80%) | 🔴 | |
 | 9.4 | Build production `npm run build` | 🔴 | |
 
@@ -137,11 +182,11 @@
 | Phase | Statut |
 |-------|--------|
 | Phase 1 — Fondations | 🟢 |
-| Phase 2 — Lecture .docx | 🟢 |
+| Phase 2 — Upload .docx | 🟢 |
 | Phase 3 — Détection regex | 🟢 |
 | Phase 4 — Mapping/Tags | 🟢 |
 | Phase 5 — Revue interactive | 🟢 |
 | Phase 6 — Reconstruction .docx | 🔴 |
 | Phase 7 — Restauration | 🔴 |
-| Phase 8 — Navigation/UI | 🔴 |
+| Phase 8 — Navigation/UI avancée | 🔴 |
 | Phase 9 — Finitions | 🔴 |
