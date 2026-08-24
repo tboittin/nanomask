@@ -5,6 +5,7 @@ import { PseudoTableau } from './PseudoTableau';
 const TAGS = [
   { tag: '[EMAIL]', valeurs: ['test@exemple.fr'], estNouveau: false },
   { tag: '[TEL]', valeurs: ['0612345678'], estNouveau: true },
+  { tag: '[VIDE]', valeurs: [], estNouveau: false },
 ];
 
 const CONFLITS = [
@@ -34,6 +35,12 @@ describe('PseudoTableau', () => {
     render(<PseudoTableau {...props} />);
     expect(screen.getByText('test@exemple.fr')).toBeInTheDocument();
     expect(screen.getByText('0612345678')).toBeInTheDocument();
+  });
+
+  it('affiche "vide" pour un tag sans valeur', () => {
+    render(<PseudoTableau {...props} />);
+    const vides = screen.getAllByText('vide');
+    expect(vides.length).toBeGreaterThanOrEqual(1);
   });
 
   it('affiche les conflits', () => {
@@ -71,5 +78,97 @@ describe('PseudoTableau', () => {
     fireEvent.click(ajouters[0]);
 
     expect(onAjouterTag).toHaveBeenCalledWith('PERSONNE', 'Sophie');
+  });
+
+  it('annule le formulaire d\'ajout manuel', () => {
+    render(<PseudoTableau {...props} />);
+    const boutons = screen.getAllByText('+ Ajouter un pseudo');
+    fireEvent.click(boutons[0]);
+    fireEvent.click(screen.getByText('Annuler'));
+    expect(screen.queryByPlaceholderText('Type (ex: PERSONNE)')).not.toBeInTheDocument();
+  });
+
+  it('appelle onSupprimer au clic sur 🗑', () => {
+    const onSupprimer = vi.fn();
+    render(<PseudoTableau {...props} onSupprimer={onSupprimer} />);
+    const poubelles = screen.getAllByTitle('Supprimer');
+    fireEvent.click(poubelles[0]);
+    expect(onSupprimer).toHaveBeenCalledWith('[EMAIL]');
+  });
+
+  it('appelle onRetirerValeur au clic sur ✕', () => {
+    const onRetirerValeur = vi.fn();
+    render(<PseudoTableau {...props} onRetirerValeur={onRetirerValeur} />);
+    const retirerBtns = screen.getAllByTitle('Retirer');
+    fireEvent.click(retirerBtns[0]);
+    expect(onRetirerValeur).toHaveBeenCalledWith('[EMAIL]', 'test@exemple.fr');
+  });
+
+  it('ouvre l\'input d\'ajout de valeur au clic sur +valeur', () => {
+    render(<PseudoTableau {...props} />);
+    const plusValeurs = screen.getAllByTitle('Ajouter une valeur');
+    fireEvent.click(plusValeurs[0]);
+    expect(screen.getByPlaceholderText('Nouvelle valeur…')).toBeInTheDocument();
+  });
+
+  it('appelle onAjouterValeur avec Enter dans l\'input', () => {
+    const onAjouterValeur = vi.fn();
+    render(<PseudoTableau {...props} onAjouterValeur={onAjouterValeur} />);
+    fireEvent.click(screen.getAllByTitle('Ajouter une valeur')[0]);
+    const inputNouveau = screen.getByPlaceholderText('Nouvelle valeur…');
+    fireEvent.change(inputNouveau, { target: { value: 'nouveau@email.fr' } });
+    fireEvent.keyDown(inputNouveau, { key: 'Enter' });
+    expect(onAjouterValeur).toHaveBeenCalledWith('[EMAIL]', 'nouveau@email.fr');
+  });
+
+  it('ferme l\'input d\'ajout de valeur avec Escape', () => {
+    render(<PseudoTableau {...props} />);
+    fireEvent.click(screen.getAllByTitle('Ajouter une valeur')[0]);
+    const inputNouveau = screen.getByPlaceholderText('Nouvelle valeur…');
+    fireEvent.keyDown(inputNouveau, { key: 'Escape' });
+    expect(screen.queryByPlaceholderText('Nouvelle valeur…')).not.toBeInTheDocument();
+  });
+
+  it('appelle onTagClick au clic sur une ligne', () => {
+    const onTagClick = vi.fn();
+    render(<PseudoTableau {...props} onTagClick={onTagClick} />);
+    fireEvent.click(screen.getByText('[EMAIL]'));
+    expect(onTagClick).toHaveBeenCalledWith('[EMAIL]');
+  });
+
+  it('ouvre l\'édition du tag au double-clic', () => {
+    render(<PseudoTableau {...props} />);
+    fireEvent.doubleClick(screen.getByText('[EMAIL]'));
+    const inputs = screen.getAllByDisplayValue('[EMAIL]');
+    expect(inputs.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renomme le tag avec Enter', () => {
+    const onRenommer = vi.fn();
+    render(<PseudoTableau {...props} onRenommer={onRenommer} />);
+    fireEvent.doubleClick(screen.getByText('[EMAIL]'));
+    const input = screen.getByDisplayValue('[EMAIL]');
+    fireEvent.change(input, { target: { value: '[EMAIL_MODIFIE]' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(onRenommer).toHaveBeenCalledWith('[EMAIL]', '[EMAIL_MODIFIE]');
+  });
+
+  it('annule le renommage avec Escape', () => {
+    const onRenommer = vi.fn();
+    render(<PseudoTableau {...props} onRenommer={onRenommer} />);
+    fireEvent.doubleClick(screen.getByText('[EMAIL]'));
+    const input = screen.getByDisplayValue('[EMAIL]');
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(onRenommer).not.toHaveBeenCalled();
+  });
+
+  it('annule le renommage au blur si vide', () => {
+    const onRenommer = vi.fn();
+    render(<PseudoTableau {...props} onRenommer={onRenommer} />);
+    fireEvent.doubleClick(screen.getByText('[EMAIL]'));
+    const input = screen.getByDisplayValue('[EMAIL]');
+    fireEvent.change(input, { target: { value: '' } });
+    fireEvent.blur(input);
+    expect(onRenommer).not.toHaveBeenCalled();
   });
 });

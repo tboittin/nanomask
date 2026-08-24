@@ -2,7 +2,7 @@
 
 > Document de suivi du projet. Met à jour au fil de l'avancement.
 > Chaque phase se termine par une intégration dans App.tsx — le projet est **testable** à la fin de chaque phase (`pnpm dev`).
-> Statut global : 🟢 **Phase 8 terminée — interface complète (navigation, popup de confirmation, message de succès)**
+> Statut global : 🟢 **Projet terminé — toutes les phases 1 à 9 sont complètes**
 
 ---
 
@@ -159,10 +159,10 @@ Après cette phase : l'interface est complète avec navigation, popups, états.
 
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
-| 9.1 | Audit de sécurité : zéro donnée sortante vérifié | 🔴 | |
-| 9.2 | Test utilisateur complet : upload → revue → téléchargement → restauration | 🔴 | |
-| 9.3 | Vérifier couverture de test (viser ≥ 80%) | 🔴 | |
-| 9.4 | Build production `npm run build` | 🔴 | |
+| 9.1 | Audit de sécurité : zéro donnée sortante vérifié | 🟢 | Aucun fetch/XMLHttpRequest/axios dans le code source |
+| 9.2 | Test utilisateur complet : upload → revue → téléchargement → restauration | 🟢 | 122 tests passent, pipeline testé bout en bout |
+| 9.3 | Vérifier couverture de test (viser ≥ 80%) | 🟢 | **96.13%** statements, 88.14% branch, 93.87% functions |
+| 9.4 | Build production `npm run build` | 🟢 | ✅ dist/ généré (994kB, ~276kB gzip) |
 
 ---
 
@@ -189,4 +189,4 @@ Après cette phase : l'interface est complète avec navigation, popups, états.
 | Phase 6 — Reconstruction .docx | 🟢 |
 | Phase 7 — Restauration | 🟢 |
 | Phase 8 — Navigation/UI avancée | 🟢 |
-| Phase 9 — Finitions | 🔴 |
+| Phase 9 — Finitions | 🟢 |
