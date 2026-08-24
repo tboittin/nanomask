@@ -167,6 +167,7 @@ function App() {
               onFichierChoisi={handleCleChoisie}
               erreur={erreurCle}
               fichierCourant={nomFichierCle}
+              accept=".json"
             />
           </div>
         </section>

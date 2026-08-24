@@ -46,6 +46,7 @@ export function EcranRestauration() {
         <FileDropZone
           onFichierChoisi={handleCleChoisie}
           fichierCourant={nomFichierCle}
+          accept=".json"
         />
       </div>
 

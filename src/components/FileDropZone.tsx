@@ -5,6 +5,7 @@ interface FileDropZoneProps {
   chargement?: boolean;
   erreur?: string | null;
   fichierCourant?: string | null;
+  accept?: string;
 }
 
 export function FileDropZone({
@@ -12,6 +13,7 @@ export function FileDropZone({
   chargement = false,
   erreur = null,
   fichierCourant = null,
+  accept = '.docx',
 }: FileDropZoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -81,7 +83,7 @@ export function FileDropZone({
       <input
         ref={inputRef}
         type="file"
-        accept=".docx"
+        accept={accept}
         onChange={handleInputChange}
         style={{ display: 'none' }}
         data-testid="input-fichier"
