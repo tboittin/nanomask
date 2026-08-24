@@ -1,7 +1,7 @@
 # PROGRESS.md — NanoMask
 
 > Document de suivi du projet. Met à jour au fil de l'avancement.
-> Statut global : 🟡 **Phase 1 terminée**
+> Statut global : 🟡 **Phase 2 terminée**
 
 ---
 
@@ -28,10 +28,7 @@
 
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
-| 2.1 | Installer `mammoth` | 🔴 | |
-| 2.2 | Créer le hook `useDocxUpload()` — upload + extraction texte brut | 🔴 | |
-| 2.3 | Encapsuler dans un composant `FileDropZone` (glisser-déposer + sélecteur) | 🔴 | |
-| 2.4 | Tests : upload fichier, extraction texte, erreur fichier invalide | 🔴 | |
+| 2.1 | Installer `mammoth` | 🟢 | `messages` (type), polyfill Blob.arrayBuffer jsdom |\n| 2.2 | Créer le hook `useDocxUpload()` — upload + extraction texte brut | 🟢 | 6 tests |\n| 2.3 | Encapsuler dans un composant `FileDropZone` (glisser-déposer + sélecteur) | 🟢 | label natif au lieu de div+onClick |\n| 2.4 | Tests : upload fichier, extraction texte, erreur fichier invalide | 🟢 | 16 tests passent |
 
 ---
 
@@ -140,7 +137,7 @@
 | Phase | Statut |
 |-------|--------|
 | Phase 1 — Fondations | 🟢 |
-| Phase 2 — Lecture .docx | 🔴 |
+| Phase 2 — Lecture .docx | 🟢 |
 | Phase 3 — Détection regex | 🔴 |
 | Phase 4 — Mapping/Tags | 🔴 |
 | Phase 5 — Revue interactive | 🔴 |
