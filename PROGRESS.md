@@ -1,7 +1,7 @@
 # PROGRESS.md — NanoMask
 
 > Document de suivi du projet. Met à jour au fil de l'avancement.
-> Statut global : 🟡 **Phase 2 terminée**
+> Statut global : 🟢 **Phase 5 terminée**
 
 ---
 
@@ -36,13 +36,13 @@
 
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
-| 3.1 | Implémenter les 9 règles regex (email, tel, ADELI, NIR, SIRET, IBAN, IP, URL, CB) | 🔴 | |
-| 3.2 | Fonction `analyzeText(text: string): Detection[]` avec positions et types | 🔴 | |
-| 3.3 | Déduplication : même valeur → même tag, variantes regroupées | 🔴 | |
-| 3.4 | Résolution de sous-chaîne (ex: "rue Gambetta" dans "15 rue Gambetta") | 🔴 | |
-| 3.5 | Support clé `.key.json` existante (mapping optionnel en entrée) | 🔴 | |
-| 3.6 | Tests : chaque regex sur des cas réels (valides + limites + faux positifs) | 🔴 | |
-| 3.7 | Tests : déduplication, conflit de sous-chaîne, chargement clé existante | 🔴 | |
+| 3.1 | Implémenter les 9 règles regex (email, tel, ADELI, NIR, SIRET, IBAN, IP, URL, CB) | 🟢 | 10 tests regex |
+| 3.2 | Fonction `analyzeText(text: string): Detection[]` avec positions et types | 🟢 | 4 tests |
+| 3.3 | Déduplication : même valeur → même tag, variantes regroupées | 🟢 | testée dans analyse.test |
+| 3.4 | Résolution de sous-chaîne (ex: "rue Gambetta" dans "15 rue Gambetta") | 🟢 | 2 tests |
+| 3.5 | Support clé `.key.json` existante (mapping optionnel en entrée) | 🟢 | via chargerCleJson |
+| 3.6 | Tests : chaque regex sur des cas réels (valides + limites + faux positifs) | 🟢 | 10 tests regex |
+| 3.7 | Tests : déduplication, conflit de sous-chaîne, chargement clé existante | 🟢 | 8 tests analyse |
 
 ---
 
@@ -50,11 +50,11 @@
 
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
-| 4.1 | Génération des tags sémantiques (`[PERSONNE]`, `[TELEPHONE]`…) avec compteurs | 🔴 | |
-| 4.2 | Fonction `applyMapping(text: string, map: Map): string` | 🔴 | |
-| 4.3 | Fonction `reverseMapping(text: string, map: Map): string` (restauration) | 🔴 | |
-| 4.4 | Génération du fichier `.key.json` | 🔴 | |
-| 4.5 | Tests : application, restauration, clé invalide/corrompue | 🔴 | |
+| 4.1 | Génération des tags sémantiques (`[PERSONNE]`, `[TELEPHONE]`…) avec compteurs | 🟢 | 3 tests |
+| 4.2 | Fonction `applyMapping(text: string, map: Map): string` | 🟢 | 2 tests |
+| 4.3 | Fonction `reverseMapping(text: string, map: Map): string` (restauration) | 🟢 | 1 test |
+| 4.4 | Génération du fichier `.key.json` | 🟢 | round-trip testé |
+| 4.5 | Tests : application, restauration, clé invalide/corrompue | 🟢 | 8 tests mapping |
 
 ---
 
@@ -62,16 +62,16 @@
 
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
-| 5.1 | Layout split : tableau (gauche) / aperçus texte (droite) | 🔴 | |
-| 5.2 | **Volet gauche** : tableau des tags avec valeurs associées | 🔴 | |
-| 5.3 | Code couleur : vert (nouveau), blanc (existant), rouge (conflit), gris (vide) | 🔴 | |
-| 5.4 | Renommer un tag (double-clic), ajouter/éditer/supprimer une valeur | 🔴 | |
-| 5.5 | Bouton "+ Ajouter un pseudo" (tag + valeur manuelle, typage libre) | 🔴 | |
-| 5.6 | **Volet droit haut** : texte pseudonymisé avec surbrillance des tags | 🔴 | |
-| 5.7 | **Volet droit bas** : texte lisible avec surbrillance des valeurs | 🔴 | |
-| 5.8 | Highlight croisé : clic tag → surbrillance bleue dans les deux textes | 🔴 | |
-| 5.9 | Détection des conflits (même valeur dans deux tags, sous-chaîne) | 🔴 | |
-| 5.10 | Tests : clic sur tag, ajout manuel, conflit affiché, rendu | 🔴 | |
+| 5.1 | Layout split : tableau (gauche) / aperçus texte (droite) | 🟢 | grid 2 colonnes |
+| 5.2 | **Volet gauche** : tableau des tags avec valeurs associées | 🟢 | PseudoTableau |
+| 5.3 | Code couleur : vert (nouveau), blanc (existant), rouge (conflit), gris (vide) | 🟢 | fonction couleurTag |
+| 5.4 | Renommer un tag (double-clic), ajouter/éditer/supprimer une valeur | 🟢 | double-clic + inputs |
+| 5.5 | Bouton "+ Ajouter un pseudo" (tag + valeur manuelle, typage libre) | 🟢 | formulaire déroulant |
+| 5.6 | **Volet droit haut** : texte pseudonymisé avec surbrillance des tags | 🟢 | TexteApercu (surlignerTags) |
+| 5.7 | **Volet droit bas** : texte lisible avec surbrillance des valeurs | 🟢 | TexteApercu (surlignerValeurs) |
+| 5.8 | Highlight croisé : clic tag → surbrillance bleue dans les deux textes | 🟢 | useRevue.mettreSurbrillance |
+| 5.9 | Détection des conflits (même valeur dans deux tags, sous-chaîne) | 🟢 | calculée dans useRevue |
+| 5.10 | Tests : clic sur tag, ajout manuel, conflit affiché, rendu | 🟢 | 24 tests Phase 5 |
 
 ---
 
@@ -138,9 +138,9 @@
 |-------|--------|
 | Phase 1 — Fondations | 🟢 |
 | Phase 2 — Lecture .docx | 🟢 |
-| Phase 3 — Détection regex | 🔴 |
-| Phase 4 — Mapping/Tags | 🔴 |
-| Phase 5 — Revue interactive | 🔴 |
+| Phase 3 — Détection regex | 🟢 |
+| Phase 4 — Mapping/Tags | 🟢 |
+| Phase 5 — Revue interactive | 🟢 |
 | Phase 6 — Reconstruction .docx | 🔴 |
 | Phase 7 — Restauration | 🔴 |
 | Phase 8 — Navigation/UI | 🔴 |
