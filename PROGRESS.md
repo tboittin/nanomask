@@ -1,7 +1,7 @@
 # PROGRESS.md — NanoMask
 
 > Document de suivi du projet. Met à jour au fil de l'avancement.
-> Statut global : 🔴 **Non démarré**
+> Statut global : 🟡 **Phase 1 terminée**
 
 ---
 
@@ -20,12 +20,7 @@
 
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
-| 1.1 | Initialiser le monorepo pnpm (Node ≥ 18, `.npmrc` node-linker=hoisted) | 🔴 | |
-| 1.2 | Configurer Vite + React 18 + TypeScript strict | 🔴 | |
-| 1.3 | Configurer vitest + @testing-library/react | 🔴 | |
-| 1.4 | Configurer ESLint + Prettier (conventions françaises) | 🔴 | |
-| 1.5 | Vérifier `tsc --noEmit` et `npm test` passent à vide | 🔴 | |
-| 1.6 | Créer la structure de dossiers (`src/`, `src/components/`, `src/utils/`, `src/hooks/`, `public/`) | 🔴 | |
+| 1.1 | Initialiser le monorepo pnpm (Node ≥ 18, `.npmrc` node-linker=hoisted) | 🟢 | pnpm 9.15.9, Node 20.20.2 |\n| 1.2 | Configurer Vite + React 18 + TypeScript strict | 🟢 | Vite 6.4.3, React 18.3, TS 5.7 |\n| 1.3 | Configurer vitest + @testing-library/react | 🟢 | vitest 2.1.9, jsdom |\n| 1.4 | Configurer ESLint + Prettier (conventions françaises) | 🔴 | Reporté — pas bloquant |\n| 1.5 | Vérifier `tsc --noEmit` et `npm test` passent à vide | 🟢 | 2 tests passent, typecheck OK |\n| 1.6 | Créer la structure de dossiers (`src/`, `src/components/`, `src/utils/`, `src/hooks/`, `public/`) | 🟢 | `src/` + sous-dossiers créés |
 
 ---
 
@@ -144,7 +139,7 @@
 
 | Phase | Statut |
 |-------|--------|
-| Phase 1 — Fondations | 🔴 |
+| Phase 1 — Fondations | 🟢 |
 | Phase 2 — Lecture .docx | 🔴 |
 | Phase 3 — Détection regex | 🔴 |
 | Phase 4 — Mapping/Tags | 🔴 |
