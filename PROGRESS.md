@@ -2,7 +2,7 @@
 
 > Document de suivi du projet. Met à jour au fil de l'avancement.
 > Chaque phase se termine par une intégration dans App.tsx — le projet est **testable** à la fin de chaque phase (`pnpm dev`).
-> Statut global : 🟢 **Phase 5 terminée — pipeline complet testable**
+> Statut global : 🟢 **Phase 7 terminée — pipeline complet upload → analyse → revue → téléchargement + restauration**
 
 ---
 
@@ -113,13 +113,13 @@ Après cette phase : on peut pseudonymiser un rapport, télécharger le .docx ps
 
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
-| 6.1 | Installer `docx` (npm) | 🔴 | |
-| 6.2 | Fonction `buildDocx(text: string): Blob` | 🔴 | |
-| 6.3 | Téléchargement simultané .docx + .key.json | 🔴 | |
-| 6.4 | **Intégration :** brancher le téléchargement au bouton "Valider et télécharger" | 🔴 | |
-| 6.5 | Tests : blob .docx valide, round-trip | 🔴 | |
+| 6.1 | Installer `docx` (npm) | 🟢 | Déjà présent dans package.json |
+| 6.2 | Fonction `buildDocx(text: string): Blob` | 🟢 | `src/utils/buildDocx.ts`, 5 tests |
+| 6.3 | Téléchargement simultané .docx + .key.json | 🟢 | `declencherTelechargement` dans `src/utils/telechargement.ts` |
+| 6.4 | **Intégration :** brancher le téléchargement au bouton "Valider et télécharger" | 🟢 | `handleValider` async dans App.tsx, 1 test |
+| 6.5 | Tests : blob .docx valide, round-trip | 🟢 | 5 tests buildDocx + 1 test App = 6 nouveaux tests |
 
-**Testable :** 🔴
+**Testable :** 🟢 upload → revue → téléchargement (.docx + .key.json)
 
 ---
 
@@ -129,14 +129,14 @@ Après cette phase : on peut restaurer un rapport modifié avec sa clé.
 
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
-| 7.1 | Upload du rapport modifié (`.docx` avec tags) | 🔴 | |
-| 7.2 | Upload de la clé `.key.json` | 🔴 | |
-| 7.3 | Pipeline de remplacement `[TAG]` → valeur d'origine | 🔴 | |
-| 7.4 | Téléchargement du rapport restauré | 🔴 | |
-| 7.5 | **Intégration :** onglet "Restaurer" dans App.tsx | 🔴 | |
-| 7.6 | Tests : round-trip complet | 🔴 | |
+| 7.1 | Upload du rapport modifié (`.docx` avec tags) | 🟢 | via `useRestauration` hook, réutilise mammoth |
+| 7.2 | Upload de la clé `.key.json` | 🟢 | intégré dans le hook |
+| 7.3 | Pipeline de remplacement `[TAG]` → valeur d'origine | 🟢 | `restaurerTexte()` existant dans mapping.ts, déclenché automatiquement |
+| 7.4 | Téléchargement du rapport restauré | 🟢 | `buildDocx` + `declencherTelechargement` |
+| 7.5 | **Intégration :** écran Restaurer dans App.tsx | 🟢 | navigation par onglets Anonymiser / Restaurer |
+| 7.6 | Tests : round-trip complet | 🟢 | 8 tests hook + 4 tests composant + 3 tests navigation = 15 nouveaux tests |
 
-**Testable :** 🔴
+**Testable :** 🟢 onglet Restaurer → upload .docx + clé → télécharger version restaurée
 
 ---
 
@@ -186,7 +186,7 @@ Après cette phase : l'interface est complète avec navigation, popups, états.
 | Phase 3 — Détection regex | 🟢 |
 | Phase 4 — Mapping/Tags | 🟢 |
 | Phase 5 — Revue interactive | 🟢 |
-| Phase 6 — Reconstruction .docx | 🔴 |
-| Phase 7 — Restauration | 🔴 |
+| Phase 6 — Reconstruction .docx | 🟢 |
+| Phase 7 — Restauration | 🟢 |
 | Phase 8 — Navigation/UI avancée | 🔴 |
 | Phase 9 — Finitions | 🔴 |

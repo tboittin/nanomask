@@ -1,13 +1,19 @@
 import { useState, useCallback, useEffect } from 'react';
 import { FileDropZone } from './components/FileDropZone';
 import { EcranRevue } from './components/EcranRevue';
+import { EcranRestauration } from './components/EcranRestauration';
 import { useDocxUpload } from './hooks/useDocxUpload';
 import { analyserTexte, fusionnerAvecMappingExistant } from './utils/analyse';
+import { genererCleJson } from './utils/mapping';
 import type { Mapping } from './utils/mapping';
+import { buildDocx } from './utils/buildDocx';
+import { declencherTelechargement } from './utils/telechargement';
 
+type Onglet = 'anonymiser' | 'restaurer';
 type Etape = 'upload' | 'revue';
 
 function App() {
+  const [onglet, setOnglet] = useState<Onglet>('anonymiser');
   const {
     fichier, texte, chargement, erreur,
     cle, erreurCle, nomFichierCle,
@@ -38,11 +44,19 @@ function App() {
   }, [texte, cle]);
 
   const handleValider = useCallback(
-    (mappingFinal: Mapping, textePseudonymise: string) => {
-      console.log('Mapping final :', mappingFinal);
-      console.log('Texte pseudonymisé :', textePseudonymise);
+    async (mappingFinal: Mapping, textePseudonymise: string) => {
+      const nomBase = fichier?.name.replace(/\.docx$/i, '') ?? 'rapport';
+
+      // Télécharger le .docx pseudonymisé
+      const blobDocx = await buildDocx(textePseudonymise);
+      declencherTelechargement(blobDocx, `${nomBase}-pseudonymise.docx`);
+
+      // Télécharger la clé .key.json
+      const contenuCle = genererCleJson(mappingFinal);
+      const blobCle = new Blob([contenuCle], { type: 'application/json' });
+      declencherTelechargement(blobCle, `${nomBase}.key.json`);
     },
-    [],
+    [fichier],
   );
 
   const handleRetour = useCallback(() => {
@@ -71,7 +85,44 @@ function App() {
         </p>
       </header>
 
-      {etape === 'upload' && (
+      {/* Navigation par onglets */}
+      <nav
+        style={{
+          display: 'flex',
+          gap: 'var(--espacement-xs)',
+          borderBottom: '1px solid var(--couleur-bordure)',
+          paddingBottom: 'var(--espacement-xs)',
+        }}
+      >
+        {(['anonymiser', 'restaurer'] as const).map((o) => (
+          <button
+            key={o}
+            onClick={() => {
+              setOnglet(o);
+              if (o !== 'anonymiser') {
+                reinitialiser();
+                setMapping(null);
+                setEtape('upload');
+              }
+            }}
+            style={{
+              padding: 'var(--espacement-sm) var(--espacement-md)',
+              background: 'none',
+              border: 'none',
+              borderBottom: o === onglet ? '2px solid var(--couleur-primaire)' : '2px solid transparent',
+              cursor: 'pointer',
+              fontWeight: o === onglet ? 600 : 400,
+              color: o === onglet ? 'var(--couleur-primaire)' : 'var(--couleur-texte-secondaire)',
+              fontSize: '0.9375rem',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            {o === 'anonymiser' ? '🔒 Anonymiser' : '🔓 Restaurer'}
+          </button>
+        ))}
+      </nav>
+
+      {onglet === 'anonymiser' && etape === 'upload' && (
         <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
           <div>
             <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)' }}>
@@ -98,7 +149,7 @@ function App() {
         </section>
       )}
 
-      {etape === 'revue' && mapping && texte && (
+      {onglet === 'anonymiser' && etape === 'revue' && mapping && texte && (
         <section>
           <EcranRevue
             texteOriginal={texte}
@@ -121,6 +172,12 @@ function App() {
               ← Recommencer avec un autre fichier
             </button>
           </div>
+        </section>
+      )}
+
+      {onglet === 'restaurer' && (
+        <section>
+          <EcranRestauration />
         </section>
       )}
     </div>
