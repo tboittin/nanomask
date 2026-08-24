@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { analyserTexte, deduplicator, resoudreConflitsSousChaine } from './analyse';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { analyserTexte, deduplicator, resoudreConflitsSousChaine, fusionnerAvecMappingExistant } from './analyse';
+import { reinitialiserCompteurs } from './mapping';
 
 describe('analyserTexte', () => {
   it('detecte des PII dans un texte', () => {
@@ -75,5 +76,45 @@ describe('resoudreConflitsSousChaine', () => {
 
     expect(net).toHaveLength(2);
     expect(conflits).toHaveLength(0);
+  });
+});
+
+describe('fusionnerAvecMappingExistant', () => {
+  beforeEach(() => reinitialiserCompteurs());
+
+  it('crée un mapping à partir de zéro si pas de clé existante', () => {
+    const detections = analyserTexte('Contact : test@exemple.fr');
+    const mapping = fusionnerAvecMappingExistant(null, detections);
+
+    expect(mapping['[EMAIL]']).toEqual(['test@exemple.fr']);
+  });
+
+  it('conserve les valeurs du mapping existant', () => {
+    const existant = { '[PERSONNE]': ['Sophie Lambert'] };
+    const detections = analyserTexte('Contact : test@exemple.fr');
+
+    const mapping = fusionnerAvecMappingExistant(existant, detections);
+
+    expect(mapping['[PERSONNE]']).toEqual(['Sophie Lambert']);
+    expect(mapping['[EMAIL]']).toEqual(['test@exemple.fr']);
+  });
+
+  it('ne duplique pas une valeur déjà présente', () => {
+    const existant = { '[EMAIL]': ['test@exemple.fr'] };
+    const detections = analyserTexte('Email : test@exemple.fr');
+
+    const mapping = fusionnerAvecMappingExistant(existant, detections);
+
+    expect(mapping['[EMAIL]']).toEqual(['test@exemple.fr']);
+  });
+
+  it('ajoute une nouvelle valeur à un tag existant de même type', () => {
+    const existant = { '[EMAIL]': ['ancien@exemple.fr'] };
+    const detections = analyserTexte('nouveau@exemple.fr');
+
+    const mapping = fusionnerAvecMappingExistant(existant, detections);
+
+    expect(mapping['[EMAIL]']).toContain('ancien@exemple.fr');
+    expect(mapping['[EMAIL]']).toContain('nouveau@exemple.fr');
   });
 });

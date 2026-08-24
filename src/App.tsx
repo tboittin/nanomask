@@ -2,38 +2,43 @@ import { useState, useCallback, useEffect } from 'react';
 import { FileDropZone } from './components/FileDropZone';
 import { EcranRevue } from './components/EcranRevue';
 import { useDocxUpload } from './hooks/useDocxUpload';
-import { analyserTexte, deduplicator } from './utils/analyse';
-import { genererMapping } from './utils/mapping';
+import { analyserTexte, fusionnerAvecMappingExistant } from './utils/analyse';
 import type { Mapping } from './utils/mapping';
 
 type Etape = 'upload' | 'revue';
 
 function App() {
-  const { fichier, texte, chargement, erreur, uploader, reinitialiser } = useDocxUpload();
+  const {
+    fichier, texte, chargement, erreur,
+    cle, erreurCle, nomFichierCle,
+    uploader, uploaderCle, reinitialiser,
+  } = useDocxUpload();
+
   const [etape, setEtape] = useState<Etape>('upload');
   const [mapping, setMapping] = useState<Mapping | null>(null);
 
   const handleFichierChoisi = useCallback(
-    async (file: File) => {
-      await uploader(file);
-    },
+    async (file: File) => { await uploader(file); },
     [uploader],
   );
 
-  // Quand le texte est extrait par useDocxUpload, lancer l'analyse une seule fois
+  const handleCleChoisie = useCallback(
+    async (file: File) => { await uploaderCle(file); },
+    [uploaderCle],
+  );
+
+  // Quand le texte est extrait, lancer l'analyse et fusionner avec la clé existante
   useEffect(() => {
     if (texte !== null) {
       const detections = analyserTexte(texte);
-      const groupes = deduplicator(detections);
-      const mappingGenere = genererMapping(groupes);
+      const mappingGenere = fusionnerAvecMappingExistant(cle, detections);
       setMapping(mappingGenere);
       setEtape('revue');
     }
-  }, [texte]);
+  }, [texte, cle]);
 
   const handleValider = useCallback(
     (mappingFinal: Mapping, textePseudonymise: string) => {
-      // Phase 6 : brancher le téléchargement ici
       console.log('Mapping final :', mappingFinal);
       console.log('Texte pseudonymisé :', textePseudonymise);
     },
@@ -67,13 +72,29 @@ function App() {
       </header>
 
       {etape === 'upload' && (
-        <section>
-          <FileDropZone
-            onFichierChoisi={handleFichierChoisi}
-            chargement={chargement}
-            erreur={erreur}
-            fichierCourant={fichier?.name ?? null}
-          />
+        <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
+          <div>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)' }}>
+              Rapport .docx
+            </h3>
+            <FileDropZone
+              onFichierChoisi={handleFichierChoisi}
+              chargement={chargement}
+              erreur={erreur}
+              fichierCourant={fichier?.name ?? null}
+            />
+          </div>
+
+          <div>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)', color: 'var(--couleur-texte-secondaire)' }}>
+              Clé .key.json existante <span style={{ fontWeight: 400 }}>(optionnel)</span>
+            </h3>
+            <FileDropZone
+              onFichierChoisi={handleCleChoisie}
+              erreur={erreurCle}
+              fichierCourant={nomFichierCle}
+            />
+          </div>
         </section>
       )}
 

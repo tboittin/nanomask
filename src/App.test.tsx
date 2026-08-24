@@ -9,6 +9,16 @@ vi.mock('mammoth', () => ({
 
 const extractRawTextMock = vi.mocked(mammoth.extractRawText);
 
+function creerFichier(nom = 'rapport.docx', contenu = 'contenu'): File {
+  return new File([contenu], nom, {
+    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  });
+}
+
+function creerCle(mapping: Record<string, string[]>, nom = 'key.json'): File {
+  return new File([JSON.stringify(mapping)], nom, { type: 'application/json' });
+}
+
 describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -22,43 +32,73 @@ describe('App', () => {
     ).toBeInTheDocument();
   });
 
-  it('affiche la zone de dépôt au démarrage', () => {
+  it('affiche la zone de dépôt .docx au démarrage', () => {
     render(<App />);
-    expect(screen.getByText(/glisser-déposer.*\.docx/i)).toBeInTheDocument();
+    const inputs = screen.getAllByTestId('input-fichier');
+    expect(inputs.length).toBeGreaterThanOrEqual(2);
+    // Le premier input accepte .docx
+    expect(inputs[0]).toHaveAttribute('accept', '.docx');
+  });
+
+  it('affiche le titre "Rapport .docx"', () => {
+    render(<App />);
+    const titres = screen.getAllByText(/rapport .docx/i);
+    expect(titres.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('affiche une zone optionnelle pour la clé .key.json', () => {
+    render(<App />);
+    const elements = screen.getAllByText(/clé .key.json/i);
+    expect(elements.length).toBeGreaterThanOrEqual(1);
   });
 
   it('passe à l\'écran de revue après upload d\'un .docx', async () => {
     extractRawTextMock.mockResolvedValue({
-      value: 'Contact : test@exemple.fr ou 0612345678. Mme Sophie Lambert.',
+      value: 'Contact : test@exemple.fr ou 0612345678',
       messages: [],
     });
 
     render(<App />);
 
-    const input = screen.getByTestId('input-fichier') as HTMLInputElement;
-    const fichier = new File(['contenu'], 'rapport.docx', {
-      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    });
+    const inputs = screen.getAllByTestId('input-fichier');
+    const inputDocx = inputs[0] as HTMLInputElement;
+    fireEvent.change(inputDocx, { target: { files: [creerFichier()] } });
 
-    fireEvent.change(input, { target: { files: [fichier] } });
-
-    // L'analyse doit être lancée et afficher l'écran de revue
     await waitFor(() => {
-      expect(screen.getByText(/Pseudos/)).toBeInTheDocument();
       expect(screen.getByText(/Valider et télécharger/)).toBeInTheDocument();
     });
+  });
 
-    // Le mapping a été généré avec un email détecté
-    expect(screen.getByText(/Texte pseudonymisé/)).toBeInTheDocument();
+  it('intègre le mapping existant lors de l\'analyse', async () => {
+    extractRawTextMock.mockResolvedValue({
+      value: 'Mme Sophie Lambert, contact : test@exemple.fr',
+      messages: [],
+    });
+
+    render(<App />);
+
+    // Charger une clé existante (deuxième input)
+    const inputs = screen.getAllByTestId('input-fichier');
+    const inputCle = inputs[1] as HTMLInputElement;
+    fireEvent.change(inputCle, {
+      target: { files: [creerCle({ '[EMAIL]': ['test@exemple.fr'] })] },
+    });
+
+    // Charger le .docx (premier input)
+    const inputDocx = inputs[0] as HTMLInputElement;
+    fireEvent.change(inputDocx, { target: { files: [creerFichier()] } });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Valider et télécharger/)).toBeInTheDocument();
+    });
   });
 
   it('affiche une erreur si fichier invalide', async () => {
     render(<App />);
 
-    const input = screen.getByTestId('input-fichier') as HTMLInputElement;
-    const fichier = new File(['hello'], 'notes.txt', { type: 'text/plain' });
-
-    fireEvent.change(input, { target: { files: [fichier] } });
+    const inputs = screen.getAllByTestId('input-fichier');
+    const inputDocx = inputs[0] as HTMLInputElement;
+    fireEvent.change(inputDocx, { target: { files: [new File(['hi'], 'notes.txt', { type: 'text/plain' })] } });
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(

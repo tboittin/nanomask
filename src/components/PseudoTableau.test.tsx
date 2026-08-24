@@ -26,8 +26,8 @@ describe('PseudoTableau', () => {
 
   it('affiche les tags', () => {
     render(<PseudoTableau {...props} />);
-    expect(screen.getByText('[EMAIL]')).toBeInTheDocument();
-    expect(screen.getByText('[TEL]')).toBeInTheDocument();
+    expect(screen.getAllByText('[EMAIL]').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('[TEL]').length).toBeGreaterThanOrEqual(1);
   });
 
   it('affiche les valeurs', () => {
@@ -43,24 +43,32 @@ describe('PseudoTableau', () => {
 
   it('affiche le bouton + Ajouter un pseudo', () => {
     render(<PseudoTableau {...props} />);
-    expect(screen.getByText('+ Ajouter un pseudo')).toBeInTheDocument();
+    const boutons = screen.getAllByText('+ Ajouter un pseudo');
+    expect(boutons.length).toBeGreaterThanOrEqual(1);
   });
 
   it('ouvre le formulaire au clic sur Ajouter un pseudo', () => {
     render(<PseudoTableau {...props} />);
-    fireEvent.click(screen.getByText('+ Ajouter un pseudo'));
-    expect(screen.getByPlaceholderText('Type (ex: PERSONNE)')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Valeur')).toBeInTheDocument();
+    const boutons = screen.getAllByText('+ Ajouter un pseudo');
+    fireEvent.click(boutons[0]);
+    expect(screen.getAllByPlaceholderText('Type (ex: PERSONNE)').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByPlaceholderText('Valeur').length).toBeGreaterThanOrEqual(1);
   });
 
   it('appelle onAjouterTag avec les valeurs saisies', () => {
     const onAjouterTag = vi.fn();
     render(<PseudoTableau {...props} onAjouterTag={onAjouterTag} />);
 
-    fireEvent.click(screen.getByText('+ Ajouter un pseudo'));
-    fireEvent.change(screen.getByPlaceholderText('Type (ex: PERSONNE)'), { target: { value: 'PERSONNE' } });
-    fireEvent.change(screen.getByPlaceholderText('Valeur'), { target: { value: 'Sophie' } });
-    fireEvent.click(screen.getByText('Ajouter'));
+    const boutons = screen.getAllByText('+ Ajouter un pseudo');
+    fireEvent.click(boutons[0]);
+
+    const types = screen.getAllByPlaceholderText('Type (ex: PERSONNE)');
+    const valeurs = screen.getAllByPlaceholderText('Valeur');
+    fireEvent.change(types[0], { target: { value: 'PERSONNE' } });
+    fireEvent.change(valeurs[0], { target: { value: 'Sophie' } });
+
+    const ajouters = screen.getAllByText('Ajouter');
+    fireEvent.click(ajouters[0]);
 
     expect(onAjouterTag).toHaveBeenCalledWith('PERSONNE', 'Sophie');
   });

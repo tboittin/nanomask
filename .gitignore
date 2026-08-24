@@ -29,3 +29,9 @@ npm-debug.log*
 
 # TypeScript (fichiers générés par composite/emitDeclarationOnly)
 *.tsbuildinfo
+
+# rapports fictifs tests
+fixtures/
+
+# output des tests
+test-output.txt

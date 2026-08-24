@@ -15,6 +15,10 @@ function creerFichierMock(contenu: ArrayBuffer, nom = 'rapport.docx'): File {
   });
 }
 
+function creerCleMock(mapping: Record<string, string[]>, nom = 'key.json'): File {
+  return new File([JSON.stringify(mapping)], nom, { type: 'application/json' });
+}
+
 describe('useDocxUpload', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -27,6 +31,9 @@ describe('useDocxUpload', () => {
     expect(result.current.texte).toBeNull();
     expect(result.current.chargement).toBe(false);
     expect(result.current.erreur).toBeNull();
+    expect(result.current.cle).toBeNull();
+    expect(result.current.nomFichierCle).toBeNull();
+    expect(result.current.erreurCle).toBeNull();
   });
 
   it('rejette un fichier qui n\'est pas .docx', async () => {
@@ -88,14 +95,49 @@ describe('useDocxUpload', () => {
     expect(result.current.texte).toBeNull();
   });
 
-  it('reinitialise l\'état', async () => {
+  it('charge une clé .key.json valide', async () => {
+    const { result } = renderHook(() => useDocxUpload());
+    const mapping = { '[EMAIL]': ['test@exemple.fr'] };
+    const fichierCle = creerCleMock(mapping);
+
+    await act(async () => {
+      await result.current.uploaderCle(fichierCle);
+    });
+
+    expect(result.current.cle).toEqual(mapping);
+    expect(result.current.nomFichierCle).toBe('key.json');
+    expect(result.current.erreurCle).toBeNull();
+  });
+
+  it('rejette une clé invalide', async () => {
+    const { result } = renderHook(() => useDocxUpload());
+    const fichierInvalide = new File(['pas du json'], 'key.json', { type: 'application/json' });
+
+    await act(async () => {
+      await result.current.uploaderCle(fichierInvalide);
+    });
+
+    expect(result.current.erreurCle).toBe('Fichier .key.json invalide ou corrompu');
+    expect(result.current.cle).toBeNull();
+  });
+
+  it('rejette une clé qui n\'est pas .json', async () => {
+    const { result } = renderHook(() => useDocxUpload());
+    const fichier = new File(['{}'], 'cle.txt', { type: 'text/plain' });
+
+    await act(async () => {
+      await result.current.uploaderCle(fichier);
+    });
+
+    expect(result.current.erreurCle).toBe('La clé doit être au format .json');
+  });
+
+  it('reinitialise tout', async () => {
     extractRawTextMock.mockResolvedValue({ value: 'texte', messages: [] });
 
     const { result } = renderHook(() => useDocxUpload());
-    const fichier = creerFichierMock(new ArrayBuffer(8));
-
     await act(async () => {
-      await result.current.uploader(fichier);
+      await result.current.uploader(creerFichierMock(new ArrayBuffer(8)));
     });
 
     expect(result.current.texte).toBe('texte');
@@ -108,5 +150,8 @@ describe('useDocxUpload', () => {
     expect(result.current.texte).toBeNull();
     expect(result.current.chargement).toBe(false);
     expect(result.current.erreur).toBeNull();
+    expect(result.current.cle).toBeNull();
+    expect(result.current.nomFichierCle).toBeNull();
+    expect(result.current.erreurCle).toBeNull();
   });
 });
