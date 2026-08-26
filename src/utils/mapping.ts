@@ -68,3 +68,26 @@ export function genererCleJson(mapping: Mapping): string {
 export function chargerCleJson(contenu: string): Mapping {
   return JSON.parse(contenu);
 }
+
+/**
+ * Vérifie si un nom de fichier (sans extension) contient des valeurs
+ * issues du mapping (données sensibles). Retourne la liste des valeurs
+ * détectées, ou une liste vide si le nom est sûr.
+ */
+export function nomContientValeursMapping(
+  nomFichier: string,
+  mapping: Mapping,
+): string[] {
+  const nomMinuscule = nomFichier.toLowerCase();
+  const detectees: string[] = [];
+
+  for (const valeurs of Object.values(mapping)) {
+    for (const valeur of valeurs) {
+      if (valeur.length > 0 && nomMinuscule.includes(valeur.toLowerCase())) {
+        detectees.push(valeur);
+      }
+    }
+  }
+
+  return detectees;
+}

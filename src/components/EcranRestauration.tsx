@@ -1,8 +1,11 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { FileDropZone } from './FileDropZone';
 import { useRestauration } from '../hooks/useRestauration';
 import { buildDocument } from '../utils/buildDocument';
 import { declencherTelechargement } from '../utils/telechargement';
+import { PopupConfirmation } from './PopupConfirmation';
+import { nomContientValeursMapping } from '../utils/mapping';
+import type { Mapping } from '../utils/mapping';
 
 export function EcranRestauration() {
   const {
@@ -11,19 +14,44 @@ export function EcranRestauration() {
     erreur,
     fichierDocx,
     extension,
+    mapping,
     nomFichierCle,
     handleDocxChoisi,
     handleCleChoisie,
     reinitialiser,
   } = useRestauration();
 
-  const handleTelecharger = useCallback(async () => {
+  const [warningNom, setWarningNom] = useState<{
+    mappingFinal: Mapping;
+    nomFichier: string;
+    valeursSuspectes: string[];
+  } | null>(null);
+
+  const executerTelechargement = useCallback(async () => {
     if (!texteRestauré || !fichierDocx) return;
     const ext = extension ?? 'docx';
     const nomBase = fichierDocx.name.replace(/\.(docx|txt|md)$/i, '') + '-restauré';
     const blob = await buildDocument(texteRestauré, ext);
     declencherTelechargement(blob, `${nomBase}.${ext}`);
   }, [texteRestauré, fichierDocx, extension]);
+
+  const handleTelecharger = useCallback(async () => {
+    if (!texteRestauré || !fichierDocx || !mapping) return;
+    const ext = extension ?? 'docx';
+    const nomBase = fichierDocx.name.replace(/\.(docx|txt|md)$/i, '');
+
+    const suspectes = nomContientValeursMapping(nomBase, mapping);
+    if (suspectes.length > 0) {
+      setWarningNom({
+        mappingFinal: mapping,
+        nomFichier: `${nomBase}-restauré.${ext}`,
+        valeursSuspectes: suspectes,
+      });
+      return;
+    }
+
+    await executerTelechargement();
+  }, [texteRestauré, fichierDocx, extension, mapping, executerTelechargement]);
 
   const estPret = texteRestauré !== null;
 
@@ -117,6 +145,20 @@ export function EcranRestauration() {
             Télécharger le rapport restauré
           </button>
         </div>
+      )}
+
+      {warningNom && (
+        <PopupConfirmation
+          titre="Nom de fichier sensible"
+          message={`Le nom du fichier téléchargé contient des données potentiellement identifiantes : ${warningNom.valeursSuspectes.join(', ')}.\n\nFichier concerné : ${warningNom.nomFichier}\n\nVoulez-vous tout de même télécharger ?`}
+          boutonConfirmer="Télécharger quand même"
+          boutonAnnuler="Annuler"
+          onConfirmer={() => {
+            setWarningNom(null);
+            executerTelechargement();
+          }}
+          onAnnuler={() => setWarningNom(null)}
+        />
       )}
     </div>
   );

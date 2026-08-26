@@ -9,9 +9,18 @@ import { type Mapping } from './utils/mapping';
 import { buildDocument } from './utils/buildDocument';
 import { declencherTelechargement } from './utils/telechargement';
 import { FooterLegal } from './components/FooterLegal';
+import { PopupConfirmation } from './components/PopupConfirmation';
+import { nomContientValeursMapping } from './utils/mapping';
 
 type Onglet = 'anonymiser' | 'restaurer';
 type Etape = 'upload' | 'revue';
+
+interface WarningDownload {
+  mappingFinal: Mapping;
+  textePseudonymise: string;
+  nomFichier: string;
+  valeursSuspectes: string[];
+}
 
 function App() {
   const [onglet, setOnglet] = useState<Onglet>('anonymiser');
@@ -24,6 +33,7 @@ function App() {
 
   const [etape, setEtape] = useState<Etape>('upload');
   const [mapping, setMapping] = useState<Mapping | null>(null);
+  const [warningNom, setWarningNom] = useState<WarningDownload | null>(null);
 
   const handleFichierChoisi = useCallback(
     async (file: File) => { await uploader(file); },
@@ -45,25 +55,48 @@ function App() {
     }
   }, [texte, cle]);
 
+  const executerTelechargement = useCallback(
+    async (mappingFinal: Mapping, textePseudonymise: string) => {
+      const ext = extension ?? 'docx';
+      const nomBase = fichier?.name.replace(/\.(docx|txt|md)$/i, '') ?? 'rapport';
+
+      const blobDoc = await buildDocument(textePseudonymise, ext);
+      declencherTelechargement(blobDoc, `${nomBase}-pseudonymise.${ext}`);
+
+      const contenuCle = genererCleJson(mappingFinal);
+      const blobCle = new Blob([contenuCle], { type: 'application/json' });
+      declencherTelechargement(blobCle, `${nomBase}.key.json`);
+
+      setMessageSucces('Fichiers téléchargés avec succès ✓');
+      setTimeout(() => setMessageSucces(null), 5000);
+    },
+    [fichier, extension],
+  );
+
   const handleValider = useCallback(
-        async (mappingFinal: Mapping, textePseudonymise: string) => {
-          const ext = extension ?? 'docx';
-          const nomBase = fichier?.name.replace(/\.(docx|txt|md)$/i, '') ?? 'rapport';
+    async (mappingFinal: Mapping, textePseudonymise: string) => {
+      const nomBase = fichier?.name.replace(/\.(docx|txt|md)$/i, '') ?? 'rapport';
+      const ext = extension ?? 'docx';
 
-          // Télécharger le document pseudonymisé
-          const blobDoc = await buildDocument(textePseudonymise, ext);
-          declencherTelechargement(blobDoc, `${nomBase}-pseudonymise.${ext}`);
+      const suspectes = nomContientValeursMapping(nomBase, mappingFinal);
+      if (suspectes.length > 0) {
+        setWarningNom({
+          mappingFinal,
+          textePseudonymise,
+          nomFichier: `${nomBase}-pseudonymise.${ext}`,
+          valeursSuspectes: suspectes,
+        });
+        return;
+      }
 
-          // Télécharger la clé .key.json
-          const contenuCle = genererCleJson(mappingFinal);
-          const blobCle = new Blob([contenuCle], { type: 'application/json' });
-          declencherTelechargement(blobCle, `${nomBase}.key.json`);
+      await executerTelechargement(mappingFinal, textePseudonymise);
+    },
+    [fichier, extension, executerTelechargement],
+  );
 
-          setMessageSucces('Fichiers téléchargés avec succès ✓');
-          setTimeout(() => setMessageSucces(null), 5000);
-        },
-        [fichier, extension],
-      );
+  const annulerWarningNom = useCallback(() => {
+    setWarningNom(null);
+  }, []);
 
   const handleRetour = useCallback(() => {
     reinitialiser();
@@ -216,6 +249,21 @@ function App() {
       </div>
 
       <FooterLegal />
+
+      {warningNom && (
+        <PopupConfirmation
+          titre="Nom de fichier sensible"
+          message={`Le nom du fichier téléchargé contient des données potentiellement identifiantes : ${warningNom.valeursSuspectes.join(', ')}.\n\nFichier concerné : ${warningNom.nomFichier}\n\nVoulez-vous tout de même télécharger ?`}
+          boutonConfirmer="Télécharger quand même"
+          boutonAnnuler="Annuler"
+          onConfirmer={() => {
+            const w = warningNom;
+            setWarningNom(null);
+            executerTelechargement(w.mappingFinal, w.textePseudonymise);
+          }}
+          onAnnuler={annulerWarningNom}
+        />
+      )}
     </>
   );
 }

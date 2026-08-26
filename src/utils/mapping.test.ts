@@ -7,6 +7,7 @@ import {
   restaurerTexte,
   genererCleJson,
   chargerCleJson,
+  nomContientValeursMapping,
 } from './mapping';
 
 describe('genererTag', () => {
@@ -88,5 +89,43 @@ describe('genererCleJson / chargerCleJson', () => {
     const reloaded = chargerCleJson(json);
 
     expect(reloaded).toEqual(mapping);
+  });
+});
+
+describe('nomContientValeursMapping', () => {
+  it('détecte une valeur du mapping dans le nom du fichier', () => {
+    const mapping = { '[PERSONNE]': ['Sophie Lambert'] };
+    expect(nomContientValeursMapping('compte-rendu Sophie Lambert', mapping)).toEqual([
+      'Sophie Lambert',
+    ]);
+  });
+
+  it('retourne une liste vide si le nom est sûr', () => {
+    const mapping = { '[PERSONNE]': ['Sophie Lambert'] };
+    expect(nomContientValeursMapping('compte-rendu patient', mapping)).toEqual([]);
+  });
+
+  it('détecte plusieurs valeurs', () => {
+    const mapping = {
+      '[PERSONNE]': ['Sophie Lambert', 'Jean Dupont'],
+    };
+    const resultat = nomContientValeursMapping(
+      'Sophie Lambert et Jean Dupont rapport',
+      mapping,
+    );
+    expect(resultat).toContain('Sophie Lambert');
+    expect(resultat).toContain('Jean Dupont');
+  });
+
+  it('ignore les valeurs vides', () => {
+    const mapping = { '[PERSONNE]': [''] };
+    expect(nomContientValeursMapping('test', mapping)).toEqual([]);
+  });
+
+  it('est insensible à la casse', () => {
+    const mapping = { '[EMAIL]': ['sophie@test.fr'] };
+    expect(nomContientValeursMapping('Rapport SOPHIE@test.fr', mapping)).toEqual([
+      'sophie@test.fr',
+    ]);
   });
 });
