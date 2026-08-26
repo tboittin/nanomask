@@ -253,7 +253,7 @@ function App() {
       {warningNom && (
         <PopupConfirmation
           titre="Nom de fichier sensible"
-          message={`Le nom du fichier téléchargé contient des données potentiellement identifiantes : ${warningNom.valeursSuspectes.join(', ')}.\n\nFichier concerné : ${warningNom.nomFichier}\n\nVoulez-vous tout de même télécharger ?`}
+          message={`Le nom du fichier source contient des données potentiellement identifiantes : ${warningNom.valeursSuspectes.join(', ')}.\n\nFichier concerné : ${warningNom.nomFichier}\n\nConseil : renommez le fichier source avant de le traiter pour éviter toute fuite via le nom du fichier téléchargé.\n\nVoulez-vous télécharger quand même ?`}
           boutonConfirmer="Télécharger quand même"
           boutonAnnuler="Annuler"
           onConfirmer={() => {
