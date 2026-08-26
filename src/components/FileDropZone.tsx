@@ -6,6 +6,7 @@ interface FileDropZoneProps {
   erreur?: string | null;
   fichierCourant?: string | null;
   accept?: string;
+  libelle?: string;
 }
 
 export function FileDropZone({
@@ -14,6 +15,7 @@ export function FileDropZone({
   erreur = null,
   fichierCourant = null,
   accept = '.docx',
+  libelle = accept ?? '.docx',
 }: FileDropZoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -68,7 +70,7 @@ export function FileDropZone({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      aria-label="Zone de dépôt de fichier .docx"
+      aria-label={`Zone de dépôt de fichier ${libelle}`}
       style={{
         display: 'block',
         border: `2px dashed ${dragOver ? 'var(--couleur-primaire)' : erreur ? 'var(--couleur-erreur)' : 'var(--couleur-bordure)'}`,
@@ -110,7 +112,7 @@ export function FileDropZone({
       ) : (
         <div>
           <p style={{ fontWeight: 600, color: 'var(--couleur-texte)' }}>
-            Glisser-déposer un fichier .docx ici
+            Glisser-déposer un fichier {libelle} ici
           </p>
           <p style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginTop: 'var(--espacement-xs)' }}>
             ou cliquer pour parcourir

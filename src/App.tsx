@@ -168,6 +168,7 @@ function App() {
               erreur={erreurCle}
               fichierCourant={nomFichierCle}
               accept=".json"
+              libelle=".key.json"
             />
           </div>
         </section>
