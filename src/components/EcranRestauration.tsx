@@ -47,6 +47,7 @@ export function EcranRestauration() {
           onFichierChoisi={handleCleChoisie}
           fichierCourant={nomFichierCle}
           accept=".json"
+          libelle=".key.json"
         />
       </div>
 
