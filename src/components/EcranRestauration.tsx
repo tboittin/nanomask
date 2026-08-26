@@ -41,7 +41,7 @@ export function EcranRestauration() {
 
       <div>
         <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)', color: 'var(--couleur-texte-secondaire)' }}>
-          Clé .key.json correspondante
+          Clé .key.json correspondante <span style={{ fontWeight: 400 }}>(obligatoire)</span>
         </h3>
         <FileDropZone
           onFichierChoisi={handleCleChoisie}
