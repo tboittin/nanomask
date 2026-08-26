@@ -1,7 +1,8 @@
 import { useState, useCallback, useMemo } from 'react';
-import * as mammoth from 'mammoth';
 import { restaurerTexte, chargerCleJson } from '../utils/mapping';
 import type { Mapping } from '../utils/mapping';
+import { extraireTexte, extensionDepuisNom } from '../utils/extraction';
+import type { ExtensionFichier } from '../utils/extraction';
 
 const TAILLE_MAX_OCTETS = 10 * 1024 * 1024; // 10 Mo
 
@@ -9,6 +10,7 @@ interface UseRestaurationReturn {
   texteAvecTags: string | null;
   texteRestauré: string | null;
   mapping: Mapping | null;
+  extension: ExtensionFichier | null;
   chargement: boolean;
   erreur: string | null;
   fichierDocx: File | null;
@@ -20,6 +22,7 @@ interface UseRestaurationReturn {
 
 export function useRestauration(): UseRestaurationReturn {
   const [fichierDocx, setFichierDocx] = useState<File | null>(null);
+  const [extension, setExtension] = useState<ExtensionFichier | null>(null);
   const [texteAvecTags, setTexteAvecTags] = useState<string | null>(null);
   const [mapping, setMapping] = useState<Mapping | null>(null);
   const [nomFichierCle, setNomFichierCle] = useState<string | null>(null);
@@ -34,9 +37,11 @@ export function useRestauration(): UseRestaurationReturn {
   const handleDocxChoisi = useCallback(async (file: File) => {
     setErreur(null);
     setTexteAvecTags(null);
+    setExtension(null);
 
-    if (!file.name.toLowerCase().endsWith('.docx')) {
-      setErreur('Le fichier doit être au format .docx');
+    const ext = extensionDepuisNom(file.name);
+    if (!ext) {
+      setErreur('Format accepté : .docx, .txt, .md');
       return;
     }
 
@@ -51,20 +56,17 @@ export function useRestauration(): UseRestaurationReturn {
     }
 
     setFichierDocx(file);
+    setExtension(ext.slice(1) as ExtensionFichier);
     setChargement(true);
 
     try {
-      const buffer = await file.arrayBuffer();
-      const resultat = await mammoth.extractRawText({ arrayBuffer: buffer });
-      setTexteAvecTags(resultat.value);
-
-      if (resultat.messages.length > 0) {
-        console.warn('Avertissements mammoth :', resultat.messages);
-      }
+      const resultat = await extraireTexte(file);
+      setTexteAvecTags(resultat);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur inconnue';
       setErreur(`Impossible de lire le fichier : ${message}`);
       setFichierDocx(null);
+      setExtension(null);
     } finally {
       setChargement(false);
     }
@@ -92,6 +94,7 @@ export function useRestauration(): UseRestaurationReturn {
     setFichierDocx(null);
     setTexteAvecTags(null);
     setMapping(null);
+    setExtension(null);
     setNomFichierCle(null);
     setChargement(false);
     setErreur(null);
@@ -101,6 +104,7 @@ export function useRestauration(): UseRestaurationReturn {
     texteAvecTags,
     texteRestauré,
     mapping,
+    extension,
     chargement,
     erreur,
     fichierDocx,

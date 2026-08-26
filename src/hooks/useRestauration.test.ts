@@ -35,15 +35,15 @@ describe('useRestauration', () => {
     expect(result.current.nomFichierCle).toBeNull();
   });
 
-  it('rejette un fichier qui n\'est pas .docx', async () => {
+  it('rejette un format non supporté', async () => {
     const { result } = renderHook(() => useRestauration());
-    const fauxDoc = new File(['hello'], 'notes.txt', { type: 'text/plain' });
+    const fauxDoc = new File(['hello'], 'photo.jpg', { type: 'image/jpeg' });
 
     await act(async () => {
       await result.current.handleDocxChoisi(fauxDoc);
     });
 
-    expect(result.current.erreur).toBe('Le fichier doit être au format .docx');
+    expect(result.current.erreur).toBe('Format accepté : .docx, .txt, .md');
     expect(result.current.fichierDocx).toBeNull();
     expect(result.current.texteAvecTags).toBeNull();
   });

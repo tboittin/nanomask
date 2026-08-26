@@ -1,12 +1,14 @@
 import { useState, useCallback } from 'react';
-import * as mammoth from 'mammoth';
 import type { Mapping } from '../utils/mapping';
 import { chargerCleJson } from '../utils/mapping';
+import { extraireTexte, extensionDepuisNom } from '../utils/extraction';
+import type { ExtensionFichier } from '../utils/extraction';
 
 const TAILLE_MAX_OCTETS = 10 * 1024 * 1024; // 10 Mo
 
-interface UseDocxUploadReturn {
+interface UseFileUploadReturn {
   fichier: File | null;
+  extension: ExtensionFichier | null;
   texte: string | null;
   chargement: boolean;
   erreur: string | null;
@@ -18,8 +20,9 @@ interface UseDocxUploadReturn {
   reinitialiser: () => void;
 }
 
-export function useDocxUpload(): UseDocxUploadReturn {
+export function useFileUpload(): UseFileUploadReturn {
   const [fichier, setFichier] = useState<File | null>(null);
+  const [extension, setExtension] = useState<ExtensionFichier | null>(null);
   const [texte, setTexte] = useState<string | null>(null);
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -29,6 +32,7 @@ export function useDocxUpload(): UseDocxUploadReturn {
 
   const reinitialiser = useCallback(() => {
     setFichier(null);
+    setExtension(null);
     setTexte(null);
     setChargement(false);
     setErreur(null);
@@ -40,9 +44,11 @@ export function useDocxUpload(): UseDocxUploadReturn {
   const uploader = useCallback(async (file: File) => {
     setErreur(null);
     setTexte(null);
+    setExtension(null);
 
-    if (!file.name.toLowerCase().endsWith('.docx')) {
-      setErreur('Le fichier doit être au format .docx');
+    const ext = extensionDepuisNom(file.name);
+    if (!ext) {
+      setErreur('Format accepté : .docx, .txt, .md');
       return;
     }
 
@@ -57,20 +63,17 @@ export function useDocxUpload(): UseDocxUploadReturn {
     }
 
     setFichier(file);
+    setExtension(ext.slice(1) as ExtensionFichier);
     setChargement(true);
 
     try {
-      const buffer = await file.arrayBuffer();
-      const resultat = await mammoth.extractRawText({ arrayBuffer: buffer });
-      setTexte(resultat.value);
-
-      if (resultat.messages.length > 0) {
-        console.warn('Avertissements mammoth :', resultat.messages);
-      }
+      const resultat = await extraireTexte(file);
+      setTexte(resultat);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur inconnue lors de l\'extraction';
       setErreur(`Impossible de lire le fichier : ${message}`);
       setFichier(null);
+      setExtension(null);
     } finally {
       setChargement(false);
     }
@@ -95,7 +98,7 @@ export function useDocxUpload(): UseDocxUploadReturn {
   }, []);
 
   return {
-    fichier, texte, chargement, erreur,
+    fichier, extension, texte, chargement, erreur,
     cle, nomFichierCle, erreurCle,
     uploader, uploaderCle, reinitialiser,
   };

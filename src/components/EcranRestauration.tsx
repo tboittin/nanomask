@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { FileDropZone } from './FileDropZone';
 import { useRestauration } from '../hooks/useRestauration';
-import { buildDocx } from '../utils/buildDocx';
+import { buildDocument } from '../utils/buildDocument';
 import { declencherTelechargement } from '../utils/telechargement';
 
 export function EcranRestauration() {
@@ -10,6 +10,7 @@ export function EcranRestauration() {
     chargement,
     erreur,
     fichierDocx,
+    extension,
     nomFichierCle,
     handleDocxChoisi,
     handleCleChoisie,
@@ -18,10 +19,11 @@ export function EcranRestauration() {
 
   const handleTelecharger = useCallback(async () => {
     if (!texteRestauré || !fichierDocx) return;
-    const nomBase = fichierDocx.name.replace(/\.docx$/i, '') + '-restauré';
-    const blob = await buildDocx(texteRestauré);
-    declencherTelechargement(blob, `${nomBase}.docx`);
-  }, [texteRestauré, fichierDocx]);
+    const ext = extension ?? 'docx';
+    const nomBase = fichierDocx.name.replace(/\.(docx|txt|md)$/i, '') + '-restauré';
+    const blob = await buildDocument(texteRestauré, ext);
+    declencherTelechargement(blob, `${nomBase}.${ext}`);
+  }, [texteRestauré, fichierDocx, extension]);
 
   const estPret = texteRestauré !== null;
 
@@ -36,6 +38,7 @@ export function EcranRestauration() {
           chargement={chargement}
           erreur={erreur}
           fichierCourant={fichierDocx?.name ?? null}
+          accept=".docx,.txt,.md"
         />
       </div>
 

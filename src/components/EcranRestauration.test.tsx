@@ -2,15 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { EcranRestauration } from './EcranRestauration';
 import * as mammoth from 'mammoth';
-import { buildDocx } from '../utils/buildDocx';
+import { buildDocument } from '../utils/buildDocument';
 
 vi.mock('mammoth', () => ({
   extractRawText: vi.fn(),
 }));
 
-vi.mock('../utils/buildDocx', () => ({
-  buildDocx: vi.fn(() =>
-    Promise.resolve(new Blob(['fake docx'], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })),
+vi.mock('../utils/buildDocument', () => ({
+  buildDocument: vi.fn(() =>
+    Promise.resolve(new Blob(['fake doc'], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })),
   ),
 }));
 
@@ -102,7 +102,7 @@ describe('EcranRestauration', () => {
   });
 
   it('déclenche le téléchargement au clic', async () => {
-    const buildDocxMock = vi.mocked(buildDocx);
+    const buildDocumentMock = vi.mocked(buildDocument);
 
     extractRawTextMock.mockResolvedValue({
       value: 'Rapport pour [PERSONNE]',
@@ -140,8 +140,8 @@ describe('EcranRestauration', () => {
     fireEvent.click(screen.getByText('Télécharger le rapport restauré'));
 
     await waitFor(() => {
-      expect(buildDocxMock).toHaveBeenCalledTimes(1);
-      expect(buildDocxMock).toHaveBeenCalledWith('Rapport pour Sophie Lambert');
+      expect(buildDocumentMock).toHaveBeenCalledTimes(1);
+      expect(buildDocumentMock).toHaveBeenCalledWith('Rapport pour Sophie Lambert', 'docx');
     });
 
     expect(URL.createObjectURL).toHaveBeenCalledTimes(1);

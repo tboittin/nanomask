@@ -2,19 +2,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from './App';
 import * as mammoth from 'mammoth';
-import { buildDocx } from './utils/buildDocx';
+import { buildDocument } from './utils/buildDocument';
 
 vi.mock('mammoth', () => ({
   extractRawText: vi.fn(),
 }));
 
-vi.mock('./utils/buildDocx', () => ({
-  buildDocx: vi.fn(() =>
-    Promise.resolve(new Blob(['fake docx'], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })),
+vi.mock('./utils/buildDocument', () => ({
+  buildDocument: vi.fn(() =>
+    Promise.resolve(new Blob(['fake doc'], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })),
   ),
 }));
 
-const buildDocxMock = vi.mocked(buildDocx);
+const buildDocumentMock = vi.mocked(buildDocument);
 const extractRawTextMock = vi.mocked(mammoth.extractRawText);
 
 function creerFichier(nom = 'rapport.docx', contenu = 'contenu'): File {
@@ -43,17 +43,17 @@ describe('App', () => {
     ).toBeInTheDocument();
   });
 
-  it('affiche la zone de dépôt .docx au démarrage', () => {
+  it('affiche la zone de dépôt au démarrage', () => {
     render(<App />);
     const inputs = screen.getAllByTestId('input-fichier');
     expect(inputs.length).toBeGreaterThanOrEqual(2);
-    // Le premier input accepte .docx
-    expect(inputs[0]).toHaveAttribute('accept', '.docx');
+    // Le premier input accepte .docx, .txt, .md
+    expect(inputs[0]).toHaveAttribute('accept', '.docx,.txt,.md');
   });
 
-  it('affiche le titre "Rapport .docx"', () => {
+  it('affiche le titre "Rapport (.docx, .txt, .md)"', () => {
     render(<App />);
-    const titres = screen.getAllByText(/rapport .docx/i);
+    const titres = screen.getAllByText(/Rapport.*.docx.*.txt.*.md/i);
     expect(titres.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -109,11 +109,11 @@ describe('App', () => {
 
     const inputs = screen.getAllByTestId('input-fichier');
     const inputDocx = inputs[0] as HTMLInputElement;
-    fireEvent.change(inputDocx, { target: { files: [new File(['hi'], 'notes.txt', { type: 'text/plain' })] } });
+    fireEvent.change(inputDocx, { target: { files: [new File(['hi'], 'photo.jpg', { type: 'image/jpeg' })] } });
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(
-        'Le fichier doit être au format .docx',
+        'Format accepté : .docx, .txt, .md',
       );
     });
   });
@@ -137,12 +137,15 @@ describe('App', () => {
     fireEvent.click(screen.getByText('Valider et télécharger'));
 
     await waitFor(() => {
-      // buildDocx a été appelé avec le texte pseudonymisé
-      expect(buildDocxMock).toHaveBeenCalledTimes(1);
-      expect(buildDocxMock).toHaveBeenCalledWith(expect.stringContaining('[EMAIL]'));
+      // buildDocument a été appelé avec le texte pseudonymisé + le format
+      expect(buildDocumentMock).toHaveBeenCalledTimes(1);
+      expect(buildDocumentMock).toHaveBeenCalledWith(
+        expect.stringContaining('[EMAIL]'),
+        'docx',
+      );
     });
 
-    // createObjectURL a été appelé 2 fois : .docx + .key.json
+    // createObjectURL a été appelé 2 fois : doc + .key.json
     expect(URL.createObjectURL).toHaveBeenCalledTimes(2);
   });
 
@@ -190,6 +193,6 @@ describe('App', () => {
 
     // Revenir en Anonymiser
     fireEvent.click(screen.getByText('🔒 Anonymiser'));
-    expect(screen.getByText(/Rapport .docx/)).toBeInTheDocument();
+    expect(screen.getByText(/Rapport.*\.docx/)).toBeInTheDocument();
   });
 });

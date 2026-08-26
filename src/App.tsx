@@ -2,11 +2,11 @@ import { useState, useCallback, useEffect } from 'react';
 import { FileDropZone } from './components/FileDropZone';
 import { EcranRevue } from './components/EcranRevue';
 import { EcranRestauration } from './components/EcranRestauration';
-import { useDocxUpload } from './hooks/useDocxUpload';
+import { useFileUpload } from './hooks/useFileUpload';
 import { analyserTexte, fusionnerAvecMappingExistant } from './utils/analyse';
 import { genererCleJson } from './utils/mapping';
 import { type Mapping } from './utils/mapping';
-import { buildDocx } from './utils/buildDocx';
+import { buildDocument } from './utils/buildDocument';
 import { declencherTelechargement } from './utils/telechargement';
 import { FooterLegal } from './components/FooterLegal';
 
@@ -17,10 +17,10 @@ function App() {
   const [onglet, setOnglet] = useState<Onglet>('anonymiser');
   const [messageSucces, setMessageSucces] = useState<string | null>(null);
   const {
-    fichier, texte, chargement, erreur,
+    fichier, extension, texte, chargement, erreur,
     cle, erreurCle, nomFichierCle,
     uploader, uploaderCle, reinitialiser,
-  } = useDocxUpload();
+  } = useFileUpload();
 
   const [etape, setEtape] = useState<Etape>('upload');
   const [mapping, setMapping] = useState<Mapping | null>(null);
@@ -46,23 +46,24 @@ function App() {
   }, [texte, cle]);
 
   const handleValider = useCallback(
-      async (mappingFinal: Mapping, textePseudonymise: string) => {
-        const nomBase = fichier?.name.replace(/\\.docx$/i, '') ?? 'rapport';
+        async (mappingFinal: Mapping, textePseudonymise: string) => {
+          const ext = extension ?? 'docx';
+          const nomBase = fichier?.name.replace(/\.(docx|txt|md)$/i, '') ?? 'rapport';
 
-        // Télécharger le .docx pseudonymisé
-        const blobDocx = await buildDocx(textePseudonymise);
-        declencherTelechargement(blobDocx, `${nomBase}-pseudonymise.docx`);
+          // Télécharger le document pseudonymisé
+          const blobDoc = await buildDocument(textePseudonymise, ext);
+          declencherTelechargement(blobDoc, `${nomBase}-pseudonymise.${ext}`);
 
-        // Télécharger la clé .key.json
-        const contenuCle = genererCleJson(mappingFinal);
-        const blobCle = new Blob([contenuCle], { type: 'application/json' });
-        declencherTelechargement(blobCle, `${nomBase}.key.json`);
+          // Télécharger la clé .key.json
+          const contenuCle = genererCleJson(mappingFinal);
+          const blobCle = new Blob([contenuCle], { type: 'application/json' });
+          declencherTelechargement(blobCle, `${nomBase}.key.json`);
 
-        setMessageSucces('Fichiers téléchargés avec succès ✓');
-        setTimeout(() => setMessageSucces(null), 5000);
-      },
-      [fichier],
-    );
+          setMessageSucces('Fichiers téléchargés avec succès ✓');
+          setTimeout(() => setMessageSucces(null), 5000);
+        },
+        [fichier, extension],
+      );
 
   const handleRetour = useCallback(() => {
     reinitialiser();
@@ -155,13 +156,14 @@ function App() {
           <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
             <div>
               <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)' }}>
-                Rapport .docx
+                Rapport (.docx, .txt, .md)
               </h3>
               <FileDropZone
                 onFichierChoisi={handleFichierChoisi}
                 chargement={chargement}
                 erreur={erreur}
                 fichierCourant={fichier?.name ?? null}
+                accept=".docx,.txt,.md"
               />
             </div>
 
