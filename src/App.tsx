@@ -81,6 +81,8 @@ function App() {
           flexDirection: 'column',
           gap: 'var(--espacement-lg)',
           flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
           width: '100%',
         }}
       >
