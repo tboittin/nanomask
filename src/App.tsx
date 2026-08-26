@@ -5,9 +5,10 @@ import { EcranRestauration } from './components/EcranRestauration';
 import { useDocxUpload } from './hooks/useDocxUpload';
 import { analyserTexte, fusionnerAvecMappingExistant } from './utils/analyse';
 import { genererCleJson } from './utils/mapping';
-import type { Mapping } from './utils/mapping';
+import { type Mapping } from './utils/mapping';
 import { buildDocx } from './utils/buildDocx';
 import { declencherTelechargement } from './utils/telechargement';
+import { FooterLegal } from './components/FooterLegal';
 
 type Onglet = 'anonymiser' | 'restaurer';
 type Etape = 'upload' | 'revue';
@@ -78,6 +79,7 @@ function App() {
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--espacement-lg)',
+        flex: 1,
       }}
     >
       <header style={{ textAlign: 'center' }}>
@@ -205,6 +207,8 @@ function App() {
           <EcranRestauration />
         </section>
       )}
+
+      <FooterLegal />
     </div>
   );
 }
