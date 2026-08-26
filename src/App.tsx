@@ -71,145 +71,148 @@ function App() {
   }, [reinitialiser]);
 
   return (
-    <div
-      style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: 'var(--espacement-lg)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--espacement-lg)',
-        flex: 1,
-      }}
-    >
-      <header style={{ textAlign: 'center' }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--couleur-texte)' }}>
-          NanoMask
-        </h1>
-        <p style={{ color: 'var(--couleur-texte-secondaire)', marginTop: 'var(--espacement-xs)' }}>
-          Pseudonymisation de rapports de psychologue — 100% dans le navigateur.
-        </p>
-      </header>
-
-      {/* Navigation par onglets */}
-      <nav
+    <>
+      <div
         style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: 'var(--espacement-lg)',
           display: 'flex',
-          gap: 'var(--espacement-xs)',
-          borderBottom: '1px solid var(--couleur-bordure)',
-          paddingBottom: 'var(--espacement-xs)',
+          flexDirection: 'column',
+          gap: 'var(--espacement-lg)',
+          flex: 1,
+          width: '100%',
         }}
       >
-        {(['anonymiser', 'restaurer'] as const).map((o) => (
-          <button
-            key={o}
-            onClick={() => {
-              setOnglet(o);
-              setMessageSucces(null);
-              if (o !== 'anonymiser') {
-                reinitialiser();
-                setMapping(null);
-                setEtape('upload');
-              }
-            }}
-            style={{
-              padding: 'var(--espacement-sm) var(--espacement-md)',
-              background: 'none',
-              border: 'none',
-              borderBottom: o === onglet ? '2px solid var(--couleur-primaire)' : '2px solid transparent',
-              cursor: 'pointer',
-              fontWeight: o === onglet ? 600 : 400,
-              color: o === onglet ? 'var(--couleur-primaire)' : 'var(--couleur-texte-secondaire)',
-              fontSize: '0.9375rem',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            {o === 'anonymiser' ? '🔒 Anonymiser' : '🔓 Restaurer'}
-          </button>
-        ))}
-      </nav>
+        <header style={{ textAlign: 'center' }}>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--couleur-texte)' }}>
+            NanoMask
+          </h1>
+          <p style={{ color: 'var(--couleur-texte-secondaire)', marginTop: 'var(--espacement-xs)' }}>
+            Pseudonymisation de rapports de psychologue — 100% dans le navigateur.
+          </p>
+        </header>
 
-      {messageSucces && (
-        <div
-          role="status"
+        {/* Navigation par onglets */}
+        <nav
           style={{
-            padding: 'var(--espacement-sm) var(--espacement-md)',
-            background: '#f0fdf4',
-            border: '1px solid var(--couleur-succes)',
-            borderRadius: 'var(--rayon-bordure)',
-            color: '#166534',
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            textAlign: 'center',
+            display: 'flex',
+            gap: 'var(--espacement-xs)',
+            borderBottom: '1px solid var(--couleur-bordure)',
+            paddingBottom: 'var(--espacement-xs)',
           }}
         >
-          {messageSucces}
-        </div>
-      )}
-
-      {onglet === 'anonymiser' && etape === 'upload' && (
-        <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
-          <div>
-            <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)' }}>
-              Rapport .docx
-            </h3>
-            <FileDropZone
-              onFichierChoisi={handleFichierChoisi}
-              chargement={chargement}
-              erreur={erreur}
-              fichierCourant={fichier?.name ?? null}
-            />
-          </div>
-
-          <div>
-            <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)', color: 'var(--couleur-texte-secondaire)' }}>
-              Clé .key.json existante <span style={{ fontWeight: 400 }}>(optionnel)</span>
-            </h3>
-            <FileDropZone
-              onFichierChoisi={handleCleChoisie}
-              erreur={erreurCle}
-              fichierCourant={nomFichierCle}
-              accept=".json"
-              libelle=".key.json"
-            />
-          </div>
-        </section>
-      )}
-
-      {onglet === 'anonymiser' && etape === 'revue' && mapping && texte && (
-        <section>
-          <EcranRevue
-            texteOriginal={texte}
-            mappingInitial={mapping}
-            onValider={handleValider}
-          />
-          <div style={{ marginTop: 'var(--espacement-md)', textAlign: 'center' }}>
+          {(['anonymiser', 'restaurer'] as const).map((o) => (
             <button
-              onClick={handleRetour}
+              key={o}
+              onClick={() => {
+                setOnglet(o);
+                setMessageSucces(null);
+                if (o !== 'anonymiser') {
+                  reinitialiser();
+                  setMapping(null);
+                  setEtape('upload');
+                }
+              }}
               style={{
                 padding: 'var(--espacement-sm) var(--espacement-md)',
                 background: 'none',
-                border: '1px solid var(--couleur-bordure)',
-                borderRadius: 'var(--rayon-bordure)',
+                border: 'none',
+                borderBottom: o === onglet ? '2px solid var(--couleur-primaire)' : '2px solid transparent',
                 cursor: 'pointer',
-                color: 'var(--couleur-texte-secondaire)',
-                fontSize: '0.875rem',
+                fontWeight: o === onglet ? 600 : 400,
+                color: o === onglet ? 'var(--couleur-primaire)' : 'var(--couleur-texte-secondaire)',
+                fontSize: '0.9375rem',
+                transition: 'all 0.15s ease',
               }}
             >
-              ← Recommencer avec un autre fichier
+              {o === 'anonymiser' ? '🔒 Anonymiser' : '🔓 Restaurer'}
             </button>
-          </div>
-        </section>
-      )}
+          ))}
+        </nav>
 
-      {onglet === 'restaurer' && (
-        <section>
-          <EcranRestauration />
-        </section>
-      )}
+        {messageSucces && (
+          <div
+            role="status"
+            style={{
+              padding: 'var(--espacement-sm) var(--espacement-md)',
+              background: '#f0fdf4',
+              border: '1px solid var(--couleur-succes)',
+              borderRadius: 'var(--rayon-bordure)',
+              color: '#166534',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              textAlign: 'center',
+            }}
+          >
+            {messageSucces}
+          </div>
+        )}
+
+        {onglet === 'anonymiser' && etape === 'upload' && (
+          <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
+            <div>
+              <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)' }}>
+                Rapport .docx
+              </h3>
+              <FileDropZone
+                onFichierChoisi={handleFichierChoisi}
+                chargement={chargement}
+                erreur={erreur}
+                fichierCourant={fichier?.name ?? null}
+              />
+            </div>
+
+            <div>
+              <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)', color: 'var(--couleur-texte-secondaire)' }}>
+                Clé .key.json existante <span style={{ fontWeight: 400 }}>(optionnel)</span>
+              </h3>
+              <FileDropZone
+                onFichierChoisi={handleCleChoisie}
+                erreur={erreurCle}
+                fichierCourant={nomFichierCle}
+                accept=".json"
+                libelle=".key.json"
+              />
+            </div>
+          </section>
+        )}
+
+        {onglet === 'anonymiser' && etape === 'revue' && mapping && texte && (
+          <section>
+            <EcranRevue
+              texteOriginal={texte}
+              mappingInitial={mapping}
+              onValider={handleValider}
+            />
+            <div style={{ marginTop: 'var(--espacement-md)', textAlign: 'center' }}>
+              <button
+                onClick={handleRetour}
+                style={{
+                  padding: 'var(--espacement-sm) var(--espacement-md)',
+                  background: 'none',
+                  border: '1px solid var(--couleur-bordure)',
+                  borderRadius: 'var(--rayon-bordure)',
+                  cursor: 'pointer',
+                  color: 'var(--couleur-texte-secondaire)',
+                  fontSize: '0.875rem',
+                }}
+              >
+                ← Recommencer avec un autre fichier
+              </button>
+            </div>
+          </section>
+        )}
+
+        {onglet === 'restaurer' && (
+          <section>
+            <EcranRestauration />
+          </section>
+        )}
+      </div>
 
       <FooterLegal />
-    </div>
+    </>
   );
 }
 

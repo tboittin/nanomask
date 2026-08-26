@@ -22,7 +22,6 @@ const stylePopup: React.CSSProperties = {
 };
 
 const styleFooter: React.CSSProperties = {
-  marginTop: 'auto',
   borderTop: '1px solid var(--couleur-bordure)',
   padding: 'var(--espacement-md) var(--espacement-lg)',
   textAlign: 'center',
