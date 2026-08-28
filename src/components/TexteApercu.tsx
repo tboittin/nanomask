@@ -31,7 +31,7 @@ export function TexteApercu({
 }: TexteApercuProps) {
   const segments = useMemo(() => {
     if (surlignerTags) {
-      return decouperTags(texte, tagSurbrillance);
+      return decouperTags(texte, mapping, tagSurbrillance);
     }
     if (surlignerValeurs) {
       return decouperValeurs(texte, mapping, tagSurbrillance, valeurSurbrillance);
@@ -109,9 +109,13 @@ interface Segment {
 
 function decouperTags(
   texte: string,
+  mapping: Record<string, string[]>,
   tagSurbrillance: string | null,
 ): Segment[] {
   if (!tagSurbrillance) return [{ texte, surbrillance: false }];
+
+  // Collect all tags for other-tag detection
+  const tousLesTags = Object.keys(mapping);
 
   const segments: Segment[] = [];
   const escaped = tagSurbrillance.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -121,7 +125,15 @@ function decouperTags(
     if (part === tagSurbrillance) {
       segments.push({ texte: part, surbrillance: true, tag: part });
     } else {
-      segments.push({ texte: part, surbrillance: false });
+      // Check if this part is another tag (in green)
+      const trimmed = part.trim();
+      const autreTag = tousLesTags.some(t => t !== tagSurbrillance && t === trimmed);
+      segments.push({
+        texte: part,
+        surbrillance: false,
+        autreTag: autreTag,
+        tag: autreTag ? trimmed : undefined,
+      });
     }
   }
 
@@ -134,7 +146,6 @@ function decouperValeurs(
   tagSurbrillance: string | null,
   valeurSurbrillance: string | null,
 ): Segment[] {
-  // Collect all values from all tags, with their tag info
   type ValeurInfo = { tag: string; valeur: string };
   const toutes: ValeurInfo[] = [];
   for (const [tag, vals] of Object.entries(mapping)) {
@@ -145,7 +156,6 @@ function decouperValeurs(
 
   if (toutes.length === 0) return [{ texte, surbrillance: false }];
 
-  // Build a combined regex to find all values in the text
   const patternMap = new Map<string, ValeurInfo[]>();
   for (const vi of toutes) {
     const key = vi.valeur.toLowerCase();
@@ -173,7 +183,6 @@ function decouperValeurs(
     const matchedLower = matched.toLowerCase();
     const infos = patternMap.get(matchedLower) || [];
 
-    // Determine if this value belongs to the currently highlighted tag
     const estDuTag = tagSurbrillance !== null && infos.some(vi => vi.tag === tagSurbrillance);
     const estSpecifique = valeurSurbrillance !== null && matchedLower === valeurSurbrillance.toLowerCase();
 

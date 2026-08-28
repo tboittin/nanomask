@@ -143,6 +143,9 @@ function App() {
             gap: 'var(--espacement-xs)',
             borderBottom: '1px solid var(--couleur-bordure)',
             paddingBottom: 'var(--espacement-xs)',
+            overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            whiteSpace: 'nowrap',
           }}
         >
           {(['anonymiser', 'restaurer'] as const).map((o) => (
@@ -168,6 +171,7 @@ function App() {
                 color: o === onglet ? 'var(--couleur-primaire)' : 'var(--couleur-texte-secondaire)',
                 fontSize: '0.9375rem',
                 transition: 'all 0.15s ease',
+                flexShrink: 0,
               }}
             >
               {o === 'anonymiser' ? '🔒 Anonymiser' : '🔓 Restaurer'}

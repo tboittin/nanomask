@@ -14,17 +14,18 @@ describe('FooterLegal', () => {
     expect(screen.getByRole('dialog', { name: 'Mentions légales' })).toBeInTheDocument();
   });
 
-  it('affiche les sections placeholder dans la popup', () => {
-    render(<FooterLegal />);
-    fireEvent.click(screen.getByText('Mentions légales'));
+  it('affiche les sections avec les données du fichier legal.json', () => {
+      render(<FooterLegal />);
+      fireEvent.click(screen.getByText('Mentions légales'));
 
-    expect(screen.getByText('Éditeur')).toBeInTheDocument();
-    expect(screen.getByText('Hébergement')).toBeInTheDocument();
-    expect(screen.getByText('Protection des données')).toBeInTheDocument();
-    expect(screen.getByText('Propriété intellectuelle')).toBeInTheDocument();
-    expect(screen.getByText('Responsabilité')).toBeInTheDocument();
-    expect(screen.getByText('[Nom de l\'éditeur — à compléter]')).toBeInTheDocument();
-  });
+      expect(screen.getByText('Éditeur')).toBeInTheDocument();
+      expect(screen.getByText('Hébergement')).toBeInTheDocument();
+      expect(screen.getByText('Protection des données')).toBeInTheDocument();
+      expect(screen.getByText('Propriété intellectuelle')).toBeInTheDocument();
+      expect(screen.getByText('Responsabilité')).toBeInTheDocument();
+      expect(screen.getByText('Thomas Fleuriel Boittin')).toBeInTheDocument();
+      expect(screen.getByText(/licence MIT/)).toBeInTheDocument();
+    });
 
   it('ferme la popup au clic sur "Fermer"', () => {
     render(<FooterLegal />);

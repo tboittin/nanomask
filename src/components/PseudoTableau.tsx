@@ -153,15 +153,17 @@ export function PseudoTableau({
                           e.dataTransfer.effectAllowed = 'move';
                         }}
                         onDragOver={(e) => {
-                          if (dragValue.current && dragValue.current.tagSource === entry.tag) {
-                            e.preventDefault(); // allow reorder within same tag
-                          }
+                          e.preventDefault(); // toujours autoriser le drop
                         }}
                         onDrop={(e) => {
                           e.preventDefault();
+                          e.stopPropagation();
                           const dv = dragValue.current;
-                          if (dv && dv.tagSource === entry.tag && dv.index !== idx) {
+                          if (!dv) return;
+                          if (dv.tagSource === entry.tag && dv.index !== idx) {
                             onReordonnerValeurs(entry.tag, dv.index, idx);
+                          } else if (dv.tagSource !== entry.tag) {
+                            onDeplacerValeur(dv.valeur, dv.tagSource, entry.tag);
                           }
                           dragValue.current = null;
                         }}

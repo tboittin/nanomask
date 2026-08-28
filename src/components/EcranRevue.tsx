@@ -114,7 +114,7 @@ export function EcranRevue({
     if (matchTag) {
       revue.ajouterTag(matchTag[1], v);
     } else {
-      revue.ajouterTag('PERSONNE', v);
+      revue.ajouterTag('NOUVELLE_VALEUR', v);
     }
     setSelection(null);
     selectionRef.current = '';
@@ -188,6 +188,17 @@ export function EcranRevue({
   const handleValeurClick = useCallback((tag: string, valeur: string) => {
     revue.mettreSurbrillanceValeur(tag, valeur);
     defilerTableauVers(tag);
+    // Scroll to the value in the lisible view
+    const lisible = refLisible.current;
+    if (lisible) {
+      const spans = Array.from(lisible.querySelectorAll('span'));
+      for (const span of spans) {
+        if (span.textContent === valeur) {
+          span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          break;
+        }
+      }
+    }
   }, [revue, defilerTableauVers]);
 
   const handleDeplacerValeur = useCallback((valeur: string, tagSource: string) => {

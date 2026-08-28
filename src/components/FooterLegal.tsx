@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import legal from '../legal.json';
 
 const styleOverlay: React.CSSProperties = {
   position: 'fixed',
@@ -81,48 +82,37 @@ export function FooterLegal() {
                 <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
                   Éditeur
                 </h4>
-                <p>[Nom de l'éditeur — à compléter]</p>
-                <p>[Adresse — à compléter]</p>
-                <p>[Email / contact — à compléter]</p>
+                <p>{legal.editorName}</p>
+                <p>{legal.adress}</p>
+                <p>{legal.email}</p>
               </section>
 
               <section>
                 <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
                   Hébergement
                 </h4>
-                <p>[Hébergeur — à compléter]</p>
+                <p>{legal.provider}</p>
               </section>
 
               <section>
                 <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
                   Protection des données
                 </h4>
-                <p>
-                  Cette application traite vos documents exclusivement dans le navigateur.
-                  Aucune donnée n'est transmise à un serveur. Voir la politique de
-                  confidentialité pour plus de détails.
-                </p>
-                <p style={{ marginTop: 'var(--espacement-xs)', fontStyle: 'italic', fontSize: '0.8125rem' }}>
-                  [Politique de confidentialité — à compléter]
-                </p>
+                <p>{legal.privacy}</p>
               </section>
 
               <section>
                 <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
                   Propriété intellectuelle
                 </h4>
-                <p>
-                  [Mentions relatives aux droits d'auteur et licences — à compléter]
-                </p>
+                <p>{legal.intellectualProperty}</p>
               </section>
 
               <section>
                 <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
                   Responsabilité
                 </h4>
-                <p>
-                  [Limitations de responsabilité — à compléter]
-                </p>
+                <p>{legal.liability}</p>
               </section>
             </div>
 
