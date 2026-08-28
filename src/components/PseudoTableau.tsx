@@ -5,7 +5,9 @@ interface PseudoTableauProps {
   tags: TagEntry[];
   conflits: Conflit[];
   tagSurbrillance: string | null;
+  valeurSurbrillance: string | null;
   onTagClick: (tag: string) => void;
+  onValeurClick: (tag: string, valeur: string) => void;
   onRenommer: (ancien: string, nouveau: string) => void;
   onSupprimer: (tag: string) => void;
   onAjouterValeur: (tag: string, valeur: string) => void;
@@ -23,7 +25,9 @@ export function PseudoTableau({
   tags,
   conflits,
   tagSurbrillance,
+  valeurSurbrillance,
   onTagClick,
+  onValeurClick,
   onRenommer,
   onSupprimer,
   onAjouterValeur,
@@ -55,13 +59,14 @@ export function PseudoTableau({
           <tr style={{ borderBottom: '1px solid var(--couleur-bordure)' }}>
             <th style={{ textAlign: 'left', padding: 'var(--espacement-sm)', fontWeight: 600 }}>Tag</th>
             <th style={{ textAlign: 'left', padding: 'var(--espacement-sm)', fontWeight: 600 }}>Valeurs</th>
-            <th style={{ textAlign: 'right', padding: 'var(--espacement-sm)', fontWeight: 600 }}>Actions</th>
+            <th style={{ textAlign: 'right', padding: 'var(--espacement-sm)', fontWeight: 600 }}></th>
           </tr>
         </thead>
         <tbody>
           {tags.map(entry => (
             <tr
               key={entry.tag}
+              data-tag={entry.tag}
               onClick={() => onTagClick(entry.tag)}
               style={{
                 borderBottom: '1px solid var(--couleur-bordure)',
@@ -115,7 +120,17 @@ export function PseudoTableau({
                   <ul style={{ margin: 0, paddingLeft: 'var(--espacement-md)', listStyle: 'disc' }}>
                     {entry.valeurs.map(v => (
                       <li key={v} style={{ display: 'flex', gap: 'var(--espacement-xs)', alignItems: 'center' }}>
-                        <span>{v}</span>
+                        <span
+                          onClick={e => { e.stopPropagation(); onValeurClick(entry.tag, v); }}
+                          style={{
+                            cursor: 'pointer',
+                            backgroundColor: tagSurbrillance === entry.tag && valeurSurbrillance === v
+                              ? 'rgba(79, 70, 229, 0.15)'
+                              : 'transparent',
+                            borderRadius: '2px',
+                            transition: 'background-color 0.15s',
+                          }}
+                        >{v}</span>
                         <button
                           onClick={e => { e.stopPropagation(); onRetirerValeur(entry.tag, v); }}
                           style={{
@@ -134,6 +149,21 @@ export function PseudoTableau({
                     ))}
                   </ul>
                 )}
+                <button
+                  onClick={e => { e.stopPropagation(); setAjoutValeurTag(ajoutValeurTag === entry.tag ? null : entry.tag); }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                    color: 'var(--couleur-texte-secondaire)',
+                    marginTop: entry.valeurs.length > 0 ? 'var(--espacement-xs)' : 0,
+                    padding: 0,
+                  }}
+                  title="Ajouter une valeur"
+                >
+                  ➕
+                </button>
                 {ajoutValeurTag === entry.tag && (
                   <div style={{ display: 'flex', gap: 'var(--espacement-xs)', marginTop: 'var(--espacement-xs)' }}>
                     <input
@@ -158,13 +188,6 @@ export function PseudoTableau({
                 )}
               </td>
               <td style={{ padding: 'var(--espacement-sm)', textAlign: 'right' }}>
-                <button
-                  onClick={e => { e.stopPropagation(); setAjoutValeurTag(ajoutValeurTag === entry.tag ? null : entry.tag); }}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', marginRight: '4px' }}
-                  title="Ajouter une valeur"
-                >
-                  +valeur
-                </button>
                 <button
                   onClick={e => { e.stopPropagation(); onSupprimer(entry.tag); }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--couleur-erreur)', fontSize: '0.8rem' }}
