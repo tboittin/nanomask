@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import type { TagEntry, Conflit } from '../hooks/useRevue';
 
 interface PseudoTableauProps {
@@ -8,6 +8,8 @@ interface PseudoTableauProps {
   valeurSurbrillance: string | null;
   onTagClick: (tag: string) => void;
   onValeurClick: (tag: string, valeur: string) => void;
+  onDeplacerValeur: (valeur: string, tagSource: string, tagCible: string) => void;
+  onReordonnerValeurs: (tag: string, debut: number, fin: number) => void;
   onRenommer: (ancien: string, nouveau: string) => void;
   onSupprimer: (tag: string) => void;
   onAjouterValeur: (tag: string, valeur: string) => void;
@@ -28,6 +30,8 @@ export function PseudoTableau({
   valeurSurbrillance,
   onTagClick,
   onValeurClick,
+  onDeplacerValeur,
+  onReordonnerValeurs,
   onRenommer,
   onSupprimer,
   onAjouterValeur,
@@ -41,6 +45,8 @@ export function PseudoTableau({
   const [showAjoutManuel, setShowAjoutManuel] = useState(false);
   const [typeAjout, setTypeAjout] = useState('');
   const [valeurAjout, setValeurAjout] = useState('');
+  const [dragOverTag, setDragOverTag] = useState<string | null>(null);
+  const dragValue = useRef<{ valeur: string; tagSource: string; index: number } | null>(null);
 
   const conflitsParTag = conflits.reduce<Record<string, string[]>>((acc, c) => {
     if (!acc[c.tag]) acc[c.tag] = [];
@@ -70,9 +76,29 @@ export function PseudoTableau({
               onClick={() => onTagClick(entry.tag)}
               style={{
                 borderBottom: '1px solid var(--couleur-bordure)',
-                backgroundColor: tagSurbrillance === entry.tag ? 'rgba(79, 70, 229, 0.08)' : 'transparent',
+                backgroundColor: tagSurbrillance === entry.tag
+                  ? 'rgba(79, 70, 229, 0.08)'
+                  : dragOverTag === entry.tag
+                    ? 'rgba(34, 197, 94, 0.08)'
+                    : 'transparent',
                 cursor: 'pointer',
                 transition: 'background-color 0.15s',
+              }}
+              onDragOver={(e) => {
+                if (dragValue.current && dragValue.current.tagSource !== entry.tag) {
+                  e.preventDefault();
+                  setDragOverTag(entry.tag);
+                }
+              }}
+              onDragLeave={() => setDragOverTag(null)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOverTag(null);
+                const dv = dragValue.current;
+                if (dv && dv.tagSource !== entry.tag) {
+                  onDeplacerValeur(dv.valeur, dv.tagSource, entry.tag);
+                }
+                dragValue.current = null;
               }}
             >
               <td style={{ padding: 'var(--espacement-sm)', color: couleurTag(entry) }}>
@@ -118,8 +144,35 @@ export function PseudoTableau({
                   <span style={{ color: 'var(--couleur-texte-secondaire)', fontStyle: 'italic' }}>vide</span>
                 ) : (
                   <ul style={{ margin: 0, paddingLeft: 'var(--espacement-md)', listStyle: 'disc' }}>
-                    {entry.valeurs.map(v => (
-                      <li key={v} style={{ display: 'flex', gap: 'var(--espacement-xs)', alignItems: 'center' }}>
+                    {entry.valeurs.map((v, idx) => (
+                      <li
+                        key={v}
+                        draggable
+                        onDragStart={(e) => {
+                          dragValue.current = { valeur: v, tagSource: entry.tag, index: idx };
+                          e.dataTransfer.effectAllowed = 'move';
+                        }}
+                        onDragOver={(e) => {
+                          if (dragValue.current && dragValue.current.tagSource === entry.tag) {
+                            e.preventDefault(); // allow reorder within same tag
+                          }
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const dv = dragValue.current;
+                          if (dv && dv.tagSource === entry.tag && dv.index !== idx) {
+                            onReordonnerValeurs(entry.tag, dv.index, idx);
+                          }
+                          dragValue.current = null;
+                        }}
+                        style={{
+                          display: 'flex',
+                          gap: 'var(--espacement-xs)',
+                          alignItems: 'center',
+                          cursor: 'grab',
+                          padding: '2px 0',
+                        }}
+                      >
                         <span
                           onClick={e => { e.stopPropagation(); onValeurClick(entry.tag, v); }}
                           style={{

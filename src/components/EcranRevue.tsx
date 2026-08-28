@@ -22,7 +22,7 @@ export function EcranRevue({
   const [recentrer, setRecentrer] = useState(true);
 
   const [selection, setSelection] = useState<{ valeur: string; source: 'pseudo' | 'lisible' } | null>(null);
-  const [pickerValeur, setPickerValeur] = useState<string | null>(null);
+  const [pickerPayload, setPickerPayload] = useState<{ valeur: string; tagSource?: string } | null>(null);
   const [supprimerTag, setSupprimerTag] = useState<string | null>(null);
 
   const refPseudonymise = useRef<HTMLDivElement>(null);
@@ -40,7 +40,6 @@ export function EcranRevue({
         setSelection(null);
       }
     };
-    // délai pour laisser le temps aux autres handlers de réagir
     window.addEventListener('mouseup', handleClick);
     return () => window.removeEventListener('mouseup', handleClick);
   }, []);
@@ -59,7 +58,6 @@ export function EcranRevue({
   }, []);
 
   const defilerTexteVers = useCallback((tag: string, sens?: 'next') => {
-    // Pour la pseudo-vue (tags)
     const pseudo = refPseudonymise.current;
     if (!pseudo) return;
 
@@ -69,13 +67,11 @@ export function EcranRevue({
     if (occurrences.length === 0) return;
 
     if (sens === 'next') {
-      // Incrémenter et cycler
       const idx = (occurrenceIdx.current[tag] ?? -1) + 1;
       const cible = idx >= occurrences.length ? 0 : idx;
       occurrenceIdx.current[tag] = cible;
       occurrences[cible].scrollIntoView({ behavior: 'smooth', block: 'center' });
     } else {
-      // Scroll au premier
       occurrenceIdx.current[tag] = 0;
       occurrences[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -127,23 +123,30 @@ export function EcranRevue({
   const handleNouvelleValeur = useCallback(() => {
     const v = selectionRef.current;
     if (!v) return;
-    setPickerValeur(v);
+    setPickerPayload({ valeur: v });
   }, []);
 
   const handlePickerSelect = useCallback((tag: string) => {
-    if (!pickerValeur) return;
-    revue.ajouterValeur(tag, pickerValeur);
-    revue.mettreSurbrillanceValeur(tag, pickerValeur);
+    if (!pickerPayload) return;
+    if (pickerPayload.tagSource) {
+      // Déplacer une valeur existante
+      revue.deplacerValeur(pickerPayload.valeur, pickerPayload.tagSource, tag);
+      revue.mettreSurbrillanceValeur(tag, pickerPayload.valeur);
+    } else {
+      // Ajouter comme nouvelle valeur
+      revue.ajouterValeur(tag, pickerPayload.valeur);
+      revue.mettreSurbrillanceValeur(tag, pickerPayload.valeur);
+    }
     defilerTableauVers(tag);
-    setPickerValeur(null);
+    setPickerPayload(null);
     setSelection(null);
     selectionRef.current = '';
-  }, [pickerValeur, revue, defilerTableauVers]);
+  }, [pickerPayload, revue, defilerTableauVers]);
 
   const handlePickerAnnuler = useCallback(() => {
-    setPickerValeur(null);
-    setSelection(null);
-    selectionRef.current = '';
+    setPickerPayload(null);
+    // Ne pas effacer selection quand c'est un déplacement depuis la table
+    // (l'utilisateur peut réessayer)
   }, []);
 
   const handleSupprimer = useCallback((tag: string) => {
@@ -187,6 +190,10 @@ export function EcranRevue({
     defilerTableauVers(tag);
   }, [revue, defilerTableauVers]);
 
+  const handleDeplacerValeur = useCallback((valeur: string, tagSource: string) => {
+    setPickerPayload({ valeur, tagSource });
+  }, []);
+
   const handleTexteTagClick = useCallback((tag: string) => {
     setSelection(null);
     selectionRef.current = '';
@@ -211,6 +218,14 @@ export function EcranRevue({
     ? revue.tags.find(t => t.tag === supprimerTag)
     : null;
 
+  const pickerTitre = pickerPayload?.tagSource
+    ? `Déplacer « ${pickerPayload.valeur} » vers quel tag ?`
+    : 'Ajouter à quel tag ?';
+
+  const valeurSelectionnee = revue.valeurSurbrillance
+    ? { tag: revue.tagSurbrillance!, valeur: revue.valeurSurbrillance }
+    : null;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--espacement-md)' }}>
@@ -233,6 +248,8 @@ export function EcranRevue({
             valeurSurbrillance={revue.valeurSurbrillance}
             onTagClick={handleTagClick}
             onValeurClick={handleValeurClick}
+            onDeplacerValeur={revue.deplacerValeur}
+            onReordonnerValeurs={revue.reordonnerValeurs}
             onRenommer={revue.renommerTag}
             onSupprimer={handleSupprimer}
             onAjouterValeur={revue.ajouterValeur}
@@ -293,6 +310,29 @@ export function EcranRevue({
         </div>
       </div>
 
+      {/* Bouton déplacer si une valeur est sélectionnée dans la table */}
+      {valeurSelectionnee && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '-8px' }}>
+          <button
+            onClick={() => handleDeplacerValeur(valeurSelectionnee.valeur, valeurSelectionnee.tag)}
+            style={{
+              padding: '4px 12px',
+              background: 'none',
+              border: '1px solid var(--couleur-bordure)',
+              borderRadius: 'var(--rayon-bordure)',
+              cursor: 'pointer',
+              color: 'var(--couleur-texte-secondaire)',
+              fontSize: '0.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            📦 Déplacer « {valeurSelectionnee.valeur} »
+          </button>
+        </div>
+      )}
+
       {/* Barre d'outils */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 'var(--espacement-md)', alignItems: 'center' }}>
@@ -309,10 +349,10 @@ export function EcranRevue({
         </button>
       </div>
 
-      {/* Picker tag pour Nouvelle valeur */}
-      {pickerValeur && (
+      {/* Picker tag pour Nouvelle valeur / Déplacer */}
+      {pickerPayload && (
         <div
-          style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)' }}
           onClick={handlePickerAnnuler}
         >
           <div onClick={(e) => e.stopPropagation()} style={{
@@ -321,18 +361,15 @@ export function EcranRevue({
             boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
           }}>
             <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)', color: 'var(--couleur-texte)' }}>
-              Ajouter à quel tag ?
+              {pickerTitre}
             </h3>
             <p style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginBottom: 'var(--espacement-md)' }}>
-              Valeur : <strong>{pickerValeur}</strong>
+              Valeur : <strong>{pickerPayload.valeur}</strong>
             </p>
             <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--espacement-xs)' }}>
-              {tagsExistants.length === 0 ? (
-                <p style={{ color: 'var(--couleur-texte-secondaire)', fontStyle: 'italic', fontSize: '0.875rem' }}>
-                  Aucun tag existant. Créez d'abord un nouveau tag.
-                </p>
-              ) : (
-                tagsExistants.map((tag) => (
+              {tagsExistants
+                .filter(t => t !== pickerPayload.tagSource) // ne pas proposer le tag source
+                .map((tag) => (
                   <button key={tag} onClick={() => handlePickerSelect(tag)}
                     style={{
                       padding: 'var(--espacement-sm) var(--espacement-md)',
@@ -341,7 +378,11 @@ export function EcranRevue({
                       fontSize: '0.875rem', fontFamily: 'var(--police-mono)', color: 'var(--couleur-texte)',
                     }}
                   >{tag}</button>
-                ))
+                ))}
+              {tagsExistants.filter(t => t !== pickerPayload.tagSource).length === 0 && (
+                <p style={{ color: 'var(--couleur-texte-secondaire)', fontStyle: 'italic', fontSize: '0.875rem' }}>
+                  Aucun autre tag disponible.
+                </p>
               )}
             </div>
             <div style={{ marginTop: 'var(--espacement-md)', display: 'flex', justifyContent: 'flex-end' }}>
@@ -368,21 +409,21 @@ export function EcranRevue({
             boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
           }}>
             <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)', color: 'var(--couleur-texte)' }}>
-              Supprimer le tag ?
+              Vider le tag ?
             </h3>
             <p style={{ fontSize: '0.9375rem', color: 'var(--couleur-texte-secondaire)', lineHeight: 1.6, marginBottom: 'var(--espacement-md)' }}>
-              Êtes-vous sûr de vouloir supprimer <strong>{supprimerTag}</strong> ?
+              Êtes-vous sûr de vouloir vider les valeurs de <strong>{supprimerTag}</strong> ?
             </p>
             {tagSupprime.valeurs.length > 0 && (
               <div style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginBottom: 'var(--espacement-md)' }}>
-                <p style={{ marginBottom: 'var(--espacement-xs)' }}>Valeurs associées :</p>
+                <p style={{ marginBottom: 'var(--espacement-xs)' }}>Valeurs qui seront supprimées :</p>
                 <ul style={{ margin: 0, paddingLeft: 'var(--espacement-md)' }}>
                   {tagSupprime.valeurs.map(v => <li key={v}>{v}</li>)}
                 </ul>
               </div>
             )}
             <p style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginBottom: 'var(--espacement-lg)', fontStyle: 'italic' }}>
-              Les valeurs réapparaîtront dans le texte non pseudonymisé.
+              Le tag restera visible mais vide. Vous pourrez y ajouter des valeurs plus tard.
             </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--espacement-sm)' }}>
               <button onClick={handleAnnulerSuppression} style={{
@@ -396,7 +437,7 @@ export function EcranRevue({
                 background: 'var(--couleur-erreur)', color: 'white',
                 border: 'none', borderRadius: 'var(--rayon-bordure)',
                 cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem',
-              }}>Supprimer</button>
+              }}>Vider</button>
             </div>
           </div>
         </div>

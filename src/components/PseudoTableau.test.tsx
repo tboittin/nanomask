@@ -20,6 +20,8 @@ describe('PseudoTableau', () => {
     valeurSurbrillance: null,
     onTagClick: vi.fn(),
     onValeurClick: vi.fn(),
+    onDeplacerValeur: vi.fn(),
+    onReordonnerValeurs: vi.fn(),
     onRenommer: vi.fn(),
     onSupprimer: vi.fn(),
     onAjouterValeur: vi.fn(),

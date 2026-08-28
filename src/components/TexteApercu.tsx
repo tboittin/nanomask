@@ -81,7 +81,9 @@ export function TexteApercu({
                 ? 'rgba(79, 70, 229, 0.35)'
                 : seg.surbrillance
                   ? 'rgba(79, 70, 229, 0.12)'
-                  : 'transparent',
+                  : seg.autreTag
+                    ? 'rgba(34, 197, 94, 0.10)'
+                    : 'transparent',
               borderRadius: '2px',
               fontFamily: surlignerTags ? 'var(--police-mono)' : 'inherit',
               cursor: seg.tag ? 'pointer' : 'inherit',
@@ -100,6 +102,7 @@ interface Segment {
   texte: string;
   surbrillance: boolean;
   specifique?: boolean;
+  autreTag?: boolean;
   tag?: string;
   valeur?: string;
 }
@@ -131,45 +134,74 @@ function decouperValeurs(
   tagSurbrillance: string | null,
   valeurSurbrillance: string | null,
 ): Segment[] {
-  if (!tagSurbrillance) return [{ texte, surbrillance: false }];
+  // Collect all values from all tags, with their tag info
+  type ValeurInfo = { tag: string; valeur: string };
+  const toutes: ValeurInfo[] = [];
+  for (const [tag, vals] of Object.entries(mapping)) {
+    for (const v of vals) {
+      toutes.push({ tag, valeur: v });
+    }
+  }
 
-  const toutesValeurs = mapping[tagSurbrillance] || [];
-  if (toutesValeurs.length === 0) return [{ texte, surbrillance: false }];
+  if (toutes.length === 0) return [{ texte, surbrillance: false }];
 
-  // On cherche dans tout le texte TOUTES les valeurs de ce tag
-  // pour les marquer en "surbrillance douce"
-  const tousPatterns = toutesValeurs
+  // Build a combined regex to find all values in the text
+  const patternMap = new Map<string, ValeurInfo[]>();
+  for (const vi of toutes) {
+    const key = vi.valeur.toLowerCase();
+    if (!patternMap.has(key)) patternMap.set(key, []);
+    patternMap.get(key)!.push(vi);
+  }
+
+  const escaped = Array.from(patternMap.keys())
     .map(v => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
     .join('|');
 
-  if (!tousPatterns) return [{ texte, surbrillance: false }];
-
-  // Si une valeur spécifique est sélectionnée, on la surligne plus fort
-  const specifique = valeurSurbrillance || null;
+  if (!escaped) return [{ texte, surbrillance: false }];
 
   const segments: Segment[] = [];
-  const regex = new RegExp(`(${tousPatterns})`, 'gi');
+  const regex = new RegExp(`(${escaped})`, 'gi');
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
   while ((match = regex.exec(texte)) !== null) {
     if (match.index > lastIndex) {
-      segments.push({ texte: texte.slice(lastIndex, match.index), surbrillance: false });
+      segments.push({ texte: texte.slice(lastIndex, match.index), surbrillance: false, autreTag: false });
     }
-    const estSpecifique = specifique !== null &&
-      match[0].toLowerCase() === specifique.toLowerCase();
-    segments.push({
-      texte: match[0],
-      surbrillance: true,
-      specifique: estSpecifique,
-      tag: tagSurbrillance,
-      valeur: match[0],
-    });
+
+    const matched = match[0];
+    const matchedLower = matched.toLowerCase();
+    const infos = patternMap.get(matchedLower) || [];
+
+    // Determine if this value belongs to the currently highlighted tag
+    const estDuTag = tagSurbrillance !== null && infos.some(vi => vi.tag === tagSurbrillance);
+    const estSpecifique = valeurSurbrillance !== null && matchedLower === valeurSurbrillance.toLowerCase();
+
+    if (estDuTag) {
+      segments.push({
+        texte: matched,
+        surbrillance: true,
+        specifique: estSpecifique,
+        tag: tagSurbrillance!,
+        valeur: matched,
+      });
+    } else if (infos.length > 0) {
+      segments.push({
+        texte: matched,
+        surbrillance: false,
+        autreTag: true,
+        tag: infos[0].tag,
+        valeur: matched,
+      });
+    } else {
+      segments.push({ texte: matched, surbrillance: false, autreTag: false });
+    }
+
     lastIndex = regex.lastIndex;
   }
 
   if (lastIndex < texte.length) {
-    segments.push({ texte: texte.slice(lastIndex), surbrillance: false });
+    segments.push({ texte: texte.slice(lastIndex), surbrillance: false, autreTag: false });
   }
 
   return segments.length > 0 ? segments : [{ texte, surbrillance: false }];
