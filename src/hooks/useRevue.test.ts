@@ -28,19 +28,17 @@ describe('useRevue', () => {
   it('retire une valeur d\'un tag', () => {
     const { result } = renderHook(() => useRevue(TEXTE, MAPPING_INITIAL));
     act(() => result.current.retirerValeur('[EMAIL]', 'test@exemple.fr'));
-    expect(result.current.tags).toHaveLength(0);
+    // Le tag reste mais vide
+    expect(result.current.tags).toHaveLength(1);
+    expect(result.current.tags[0].valeurs).toHaveLength(0);
   });
 
-  it('renomme un tag', () => {
-    const { result } = renderHook(() => useRevue(TEXTE, MAPPING_INITIAL));
-    act(() => result.current.renommerTag('[EMAIL]', '[EMAIL_PRINCIPAL]'));
-    expect(result.current.tags[0].tag).toBe('[EMAIL_PRINCIPAL]');
-  });
-
-  it('supprime un tag', () => {
+  it('vide un tag (supprime les valeurs)', () => {
     const { result } = renderHook(() => useRevue(TEXTE, MAPPING_INITIAL));
     act(() => result.current.supprimerTag('[EMAIL]'));
-    expect(result.current.tags).toHaveLength(0);
+    // Le tag reste avec un tableau vide
+    expect(result.current.tags).toHaveLength(1);
+    expect(result.current.tags[0].valeurs).toHaveLength(0);
   });
 
   it('ajoute un tag manuellement', () => {

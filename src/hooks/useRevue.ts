@@ -21,6 +21,8 @@ interface UseRevueReturn {
   conflits: Conflit[];
   ajouterValeur: (tag: string, valeur: string) => void;
   retirerValeur: (tag: string, valeur: string) => void;
+  deplacerValeur: (valeur: string, tagSource: string, tagCible: string) => void;
+  reordonnerValeurs: (tag: string, debut: number, fin: number) => void;
   renommerTag: (ancien: string, nouveau: string) => void;
   supprimerTag: (tag: string) => void;
   ajouterTag: (type: string, valeur: string) => void;
@@ -104,13 +106,28 @@ export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRev
   }, []);
 
   const retirerValeur = useCallback((tag: string, valeur: string) => {
+    setMapping(prev => ({
+      ...prev,
+      [tag]: (prev[tag] || []).filter(v => v !== valeur),
+    }));
+  }, []);
+
+  const deplacerValeur = useCallback((valeur: string, tagSource: string, tagCible: string) => {
+    if (tagSource === tagCible) return;
+    setMapping(prev => ({
+      ...prev,
+      [tagSource]: (prev[tagSource] || []).filter(v => v !== valeur),
+      [tagCible]: [...(prev[tagCible] || []), valeur],
+    }));
+  }, []);
+
+  const reordonnerValeurs = useCallback((tag: string, debut: number, fin: number) => {
     setMapping(prev => {
-      const nouvelles = (prev[tag] || []).filter(v => v !== valeur);
-      if (nouvelles.length === 0) {
-        const { [tag]: _, ...reste } = prev;
-        return reste;
-      }
-      return { ...prev, [tag]: nouvelles };
+      const vals = [...(prev[tag] || [])];
+      if (debut < 0 || debut >= vals.length || fin < 0 || fin >= vals.length) return prev;
+      const [deplace] = vals.splice(debut, 1);
+      vals.splice(fin, 0, deplace);
+      return { ...prev, [tag]: vals };
     });
   }, []);
 
@@ -122,10 +139,10 @@ export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRev
   }, []);
 
   const supprimerTag = useCallback((tag: string) => {
-    setMapping(prev => {
-      const { [tag]: _, ...reste } = prev;
-      return reste;
-    });
+    setMapping(prev => ({
+      ...prev,
+      [tag]: [],
+    }));
   }, []);
 
   const ajouterTag = useCallback((type: string, valeur: string) => {
@@ -167,6 +184,8 @@ export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRev
     conflits,
     ajouterValeur,
     retirerValeur,
+    deplacerValeur,
+    reordonnerValeurs,
     renommerTag,
     supprimerTag,
     ajouterTag,
