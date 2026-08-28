@@ -8,13 +8,13 @@ const MAPPING = { '[EMAIL]': ['test@exemple.fr'] };
 describe('EcranRevue', () => {
   it('affiche le tableau des tags', () => {
     render(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
-    expect(screen.getByText('[EMAIL]')).toBeInTheDocument();
+    expect(screen.getAllByText('[EMAIL]').length).toBeGreaterThanOrEqual(1);
   });
 
   it('affiche le texte pseudonymisé', () => {
     render(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
     expect(screen.getByText(/Texte pseudonymisé/)).toBeInTheDocument();
-    expect(screen.getByText('[EMAIL]')).toBeInTheDocument();
+    expect(screen.getAllByText('[EMAIL]').length).toBeGreaterThanOrEqual(1);
   });
 
   it('affiche le texte lisible', () => {

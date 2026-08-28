@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { PseudoTableau } from './PseudoTableau';
 import { TexteApercu } from './TexteApercu';
 import { PopupConfirmation } from './PopupConfirmation';
@@ -23,11 +23,27 @@ export function EcranRevue({
 
   const [selection, setSelection] = useState<{ valeur: string; source: 'pseudo' | 'lisible' } | null>(null);
   const [pickerValeur, setPickerValeur] = useState<string | null>(null);
+  const [supprimerTag, setSupprimerTag] = useState<string | null>(null);
 
   const refPseudonymise = useRef<HTMLDivElement>(null);
   const refLisible = useRef<HTMLDivElement>(null);
   const refTableau = useRef<HTMLDivElement>(null);
   const syncing = useRef(false);
+  const selectionRef = useRef<string>('');
+  const occurrenceIdx = useRef<Record<string, number>>({});
+
+  // Nettoyer la sélection si l'utilisateur clique ailleurs
+  useEffect(() => {
+    const handleClick = () => {
+      const sel = window.getSelection();
+      if (!sel || sel.toString().trim() === '') {
+        setSelection(null);
+      }
+    };
+    // délai pour laisser le temps aux autres handlers de réagir
+    window.addEventListener('mouseup', handleClick);
+    return () => window.removeEventListener('mouseup', handleClick);
+  }, []);
 
   const defilerTableauVers = useCallback((tag: string) => {
     const tableau = refTableau.current;
@@ -39,6 +55,29 @@ export function EcranRevue({
           break;
         }
       }
+    }
+  }, []);
+
+  const defilerTexteVers = useCallback((tag: string, sens?: 'next') => {
+    // Pour la pseudo-vue (tags)
+    const pseudo = refPseudonymise.current;
+    if (!pseudo) return;
+
+    const spans = Array.from(pseudo.querySelectorAll('span'));
+    const occurrences = spans.filter(s => s.textContent === tag);
+
+    if (occurrences.length === 0) return;
+
+    if (sens === 'next') {
+      // Incrémenter et cycler
+      const idx = (occurrenceIdx.current[tag] ?? -1) + 1;
+      const cible = idx >= occurrences.length ? 0 : idx;
+      occurrenceIdx.current[tag] = cible;
+      occurrences[cible].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      // Scroll au premier
+      occurrenceIdx.current[tag] = 0;
+      occurrences[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, []);
 
@@ -62,45 +101,34 @@ export function EcranRevue({
     [syncScroll],
   );
 
-  const handleRecentrer = useCallback(() => {
-    const tag = revue.tagSurbrillance;
-    if (!tag) return;
+  const handleSelection = useCallback((valeur: string) => {
+    selectionRef.current = valeur;
+    setSelection({ valeur, source: 'lisible' });
+  }, []);
 
-    defilerTableauVers(tag);
-
-    const pseudo = refPseudonymise.current;
-    if (pseudo) {
-      const spans = pseudo.querySelectorAll('span');
-      for (const span of spans) {
-        if (span.textContent === tag) {
-          span.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          break;
-        }
-      }
-    }
-  }, [revue.tagSurbrillance, defilerTableauVers]);
-
-  const handleSelection = useCallback((valeur: string, source: 'pseudo' | 'lisible') => {
-    setSelection({ valeur, source });
+  const handleSelectionPseudo = useCallback((valeur: string) => {
+    selectionRef.current = valeur;
+    setSelection({ valeur, source: 'pseudo' });
   }, []);
 
   const handleNouveauTag = useCallback(() => {
-    if (!selection) return;
-    const valeur = selection.valeur;
-    // Si c'est un tag ([...]), l'utiliser comme type plutôt que valeur
-    const matchTag = valeur.match(/^\[(\w+(?:_\d+)?)\]$/);
+    const v = selectionRef.current;
+    if (!v) return;
+    const matchTag = v.match(/^\[(\w+(?:_\d+)?)\]$/);
     if (matchTag) {
-      revue.ajouterTag(matchTag[1], valeur);
+      revue.ajouterTag(matchTag[1], v);
     } else {
-      revue.ajouterTag('PERSONNE', valeur);
+      revue.ajouterTag('PERSONNE', v);
     }
     setSelection(null);
-  }, [selection, revue]);
+    selectionRef.current = '';
+  }, [revue]);
 
   const handleNouvelleValeur = useCallback(() => {
-    if (!selection) return;
-    setPickerValeur(selection.valeur);
-  }, [selection]);
+    const v = selectionRef.current;
+    if (!v) return;
+    setPickerValeur(v);
+  }, []);
 
   const handlePickerSelect = useCallback((tag: string) => {
     if (!pickerValeur) return;
@@ -109,11 +137,27 @@ export function EcranRevue({
     defilerTableauVers(tag);
     setPickerValeur(null);
     setSelection(null);
+    selectionRef.current = '';
   }, [pickerValeur, revue, defilerTableauVers]);
 
   const handlePickerAnnuler = useCallback(() => {
     setPickerValeur(null);
     setSelection(null);
+    selectionRef.current = '';
+  }, []);
+
+  const handleSupprimer = useCallback((tag: string) => {
+    setSupprimerTag(tag);
+  }, []);
+
+  const handleConfirmerSuppression = useCallback(() => {
+    if (!supprimerTag) return;
+    revue.supprimerTag(supprimerTag);
+    setSupprimerTag(null);
+  }, [supprimerTag, revue]);
+
+  const handleAnnulerSuppression = useCallback(() => {
+    setSupprimerTag(null);
   }, []);
 
   const handleClicValider = () => {
@@ -145,23 +189,27 @@ export function EcranRevue({
 
   const handleTexteTagClick = useCallback((tag: string) => {
     setSelection(null);
+    selectionRef.current = '';
     revue.mettreSurbrillance(tag);
     defilerTableauVers(tag);
-    if (recentrer) {
-      handleRecentrer();
-    }
-  }, [revue, defilerTableauVers, recentrer, handleRecentrer]);
+    defilerTexteVers(tag, 'next');
+  }, [revue, defilerTableauVers, defilerTexteVers]);
 
   const handleTexteValeurClick = useCallback((tag: string, valeur: string) => {
     setSelection(null);
+    selectionRef.current = '';
     revue.mettreSurbrillanceValeur(tag, valeur);
     defilerTableauVers(tag);
     if (recentrer) {
-      handleRecentrer();
+      defilerTexteVers(tag);
     }
-  }, [revue, defilerTableauVers, recentrer, handleRecentrer]);
+  }, [revue, defilerTableauVers, recentrer, defilerTexteVers]);
 
   const tagsExistants = Object.keys(revue.mappingFinal);
+
+  const tagSupprime = supprimerTag
+    ? revue.tags.find(t => t.tag === supprimerTag)
+    : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
@@ -186,7 +234,7 @@ export function EcranRevue({
             onTagClick={handleTagClick}
             onValeurClick={handleValeurClick}
             onRenommer={revue.renommerTag}
-            onSupprimer={revue.supprimerTag}
+            onSupprimer={handleSupprimer}
             onAjouterValeur={revue.ajouterValeur}
             onRetirerValeur={revue.retirerValeur}
             onAjouterTag={revue.ajouterTag}
@@ -205,17 +253,13 @@ export function EcranRevue({
               containerRef={refPseudonymise}
               onScroll={handleScroll('pseudo')}
               onTagClick={handleTexteTagClick}
-              onSelection={(v) => handleSelection(v, 'pseudo')}
+              onSelection={handleSelectionPseudo}
             />
             {selection && selection.source === 'pseudo' && (
               <div style={{
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                display: 'flex',
-                gap: 'var(--espacement-xs)',
-                padding: 'var(--espacement-sm)',
-                zIndex: 10,
+                position: 'absolute', top: 0, right: 0,
+                display: 'flex', gap: 'var(--espacement-xs)',
+                padding: 'var(--espacement-sm)', zIndex: 10,
               }}>
                 <BoutonAction label="Nouveau tag" onClick={handleNouveauTag} />
                 <BoutonAction label="Nouvelle valeur" onClick={handleNouvelleValeur} />
@@ -233,17 +277,13 @@ export function EcranRevue({
               containerRef={refLisible}
               onScroll={handleScroll('lisible')}
               onValeurClick={handleTexteValeurClick}
-              onSelection={(v) => handleSelection(v, 'lisible')}
+              onSelection={handleSelection}
             />
             {selection && selection.source === 'lisible' && (
               <div style={{
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                display: 'flex',
-                gap: 'var(--espacement-xs)',
-                padding: 'var(--espacement-sm)',
-                zIndex: 10,
+                position: 'absolute', top: 0, right: 0,
+                display: 'flex', gap: 'var(--espacement-xs)',
+                padding: 'var(--espacement-sm)', zIndex: 10,
               }}>
                 <BoutonAction label="Nouveau tag" onClick={handleNouveauTag} />
                 <BoutonAction label="Nouvelle valeur" onClick={handleNouvelleValeur} />
@@ -256,59 +296,30 @@ export function EcranRevue({
       {/* Barre d'outils */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 'var(--espacement-md)', alignItems: 'center' }}>
-          <CheckboxInput
-            checked={syncScroll}
-            onChange={setSyncScroll}
-            label="Scroll synchronisé"
-          />
-          <CheckboxInput
-            checked={recentrer}
-            onChange={setRecentrer}
-            label="Recentrer auto"
-          />
+          <CheckboxInput checked={syncScroll} onChange={setSyncScroll} label="Scroll synchronisé" />
+          <CheckboxInput checked={recentrer} onChange={setRecentrer} label="Recentrer auto" />
         </div>
-
-        <button
-          onClick={handleClicValider}
-          style={{
-            padding: 'var(--espacement-sm) var(--espacement-lg)',
-            background: 'var(--couleur-primaire)',
-            color: 'white',
-            border: 'none',
-            borderRadius: 'var(--rayon-bordure)',
-            cursor: 'pointer',
-            fontWeight: 600,
-            fontSize: '1rem',
-          }}
-        >
+        <button onClick={handleClicValider} style={{
+          padding: 'var(--espacement-sm) var(--espacement-lg)',
+          background: 'var(--couleur-primaire)', color: 'white',
+          border: 'none', borderRadius: 'var(--rayon-bordure)',
+          cursor: 'pointer', fontWeight: 600, fontSize: '1rem',
+        }}>
           Valider et télécharger
         </button>
       </div>
 
-      {/* Picker de tag pour Nouvelle valeur */}
+      {/* Picker tag pour Nouvelle valeur */}
       {pickerValeur && (
         <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
+          style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={handlePickerAnnuler}
         >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: 'white',
-              borderRadius: 'var(--rayon-bordure)',
-              padding: 'var(--espacement-lg)',
-              maxWidth: '400px',
-              width: '90%',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-            }}
-          >
+          <div onClick={(e) => e.stopPropagation()} style={{
+            background: 'white', borderRadius: 'var(--rayon-bordure)',
+            padding: 'var(--espacement-lg)', maxWidth: '400px', width: '90%',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+          }}>
             <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)', color: 'var(--couleur-texte)' }}>
               Ajouter à quel tag ?
             </h3>
@@ -322,44 +333,70 @@ export function EcranRevue({
                 </p>
               ) : (
                 tagsExistants.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => handlePickerSelect(tag)}
+                  <button key={tag} onClick={() => handlePickerSelect(tag)}
                     style={{
                       padding: 'var(--espacement-sm) var(--espacement-md)',
-                      background: 'var(--couleur-surface)',
-                      border: '1px solid var(--couleur-bordure)',
-                      borderRadius: 'var(--rayon-bordure)',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      fontSize: '0.875rem',
-                      fontFamily: 'var(--police-mono)',
-                      color: 'var(--couleur-texte)',
-                      transition: 'background 0.1s',
+                      background: 'var(--couleur-surface)', border: '1px solid var(--couleur-bordure)',
+                      borderRadius: 'var(--rayon-bordure)', cursor: 'pointer', textAlign: 'left',
+                      fontSize: '0.875rem', fontFamily: 'var(--police-mono)', color: 'var(--couleur-texte)',
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--couleur-fond)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--couleur-surface)'; }}
-                  >
-                    {tag}
-                  </button>
+                  >{tag}</button>
                 ))
               )}
             </div>
             <div style={{ marginTop: 'var(--espacement-md)', display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                onClick={handlePickerAnnuler}
-                style={{
-                  padding: 'var(--espacement-sm) var(--espacement-md)',
-                  background: 'none',
-                  border: '1px solid var(--couleur-bordure)',
-                  borderRadius: 'var(--rayon-bordure)',
-                  cursor: 'pointer',
-                  color: 'var(--couleur-texte-secondaire)',
-                  fontSize: '0.875rem',
-                }}
-              >
-                Annuler
-              </button>
+              <button onClick={handlePickerAnnuler} style={{
+                padding: 'var(--espacement-sm) var(--espacement-md)',
+                background: 'none', border: '1px solid var(--couleur-bordure)',
+                borderRadius: 'var(--rayon-bordure)', cursor: 'pointer',
+                color: 'var(--couleur-texte-secondaire)', fontSize: '0.875rem',
+              }}>Annuler</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Popup confirmation suppression */}
+      {supprimerTag && tagSupprime && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)' }}
+          onClick={handleAnnulerSuppression}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{
+            background: 'white', borderRadius: 'var(--rayon-bordure)',
+            padding: 'var(--espacement-lg)', maxWidth: '480px', width: '90%',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+          }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)', color: 'var(--couleur-texte)' }}>
+              Supprimer le tag ?
+            </h3>
+            <p style={{ fontSize: '0.9375rem', color: 'var(--couleur-texte-secondaire)', lineHeight: 1.6, marginBottom: 'var(--espacement-md)' }}>
+              Êtes-vous sûr de vouloir supprimer <strong>{supprimerTag}</strong> ?
+            </p>
+            {tagSupprime.valeurs.length > 0 && (
+              <div style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginBottom: 'var(--espacement-md)' }}>
+                <p style={{ marginBottom: 'var(--espacement-xs)' }}>Valeurs associées :</p>
+                <ul style={{ margin: 0, paddingLeft: 'var(--espacement-md)' }}>
+                  {tagSupprime.valeurs.map(v => <li key={v}>{v}</li>)}
+                </ul>
+              </div>
+            )}
+            <p style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginBottom: 'var(--espacement-lg)', fontStyle: 'italic' }}>
+              Les valeurs réapparaîtront dans le texte non pseudonymisé.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--espacement-sm)' }}>
+              <button onClick={handleAnnulerSuppression} style={{
+                padding: 'var(--espacement-sm) var(--espacement-md)',
+                background: 'none', border: '1px solid var(--couleur-bordure)',
+                borderRadius: 'var(--rayon-bordure)', cursor: 'pointer',
+                color: 'var(--couleur-texte-secondaire)', fontSize: '0.875rem',
+              }}>Annuler</button>
+              <button onClick={handleConfirmerSuppression} style={{
+                padding: 'var(--espacement-sm) var(--espacement-md)',
+                background: 'var(--couleur-erreur)', color: 'white',
+                border: 'none', borderRadius: 'var(--rayon-bordure)',
+                cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem',
+              }}>Supprimer</button>
             </div>
           </div>
         </div>
@@ -380,28 +417,15 @@ export function EcranRevue({
 }
 
 function CheckboxInput({ checked, onChange, label }: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  label: string;
+  checked: boolean; onChange: (v: boolean) => void; label: string;
 }) {
   return (
-    <label
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--espacement-sm)',
-        fontSize: '0.875rem',
-        color: 'var(--couleur-texte-secondaire)',
-        cursor: 'pointer',
-        userSelect: 'none',
-      }}
-    >
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        style={{ cursor: 'pointer' }}
-      />
+    <label style={{
+      display: 'flex', alignItems: 'center', gap: 'var(--espacement-sm)',
+      fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)',
+      cursor: 'pointer', userSelect: 'none',
+    }}>
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ cursor: 'pointer' }} />
       {label}
     </label>
   );
@@ -409,22 +433,11 @@ function CheckboxInput({ checked, onChange, label }: {
 
 function BoutonAction({ label, onClick }: { label: string; onClick: () => void }) {
   return (
-    <button
-      onClick={(e) => { e.stopPropagation(); onClick(); }}
-      style={{
-        padding: '4px 10px',
-        background: 'var(--couleur-primaire)',
-        color: 'white',
-        border: 'none',
-        borderRadius: 'var(--rayon-bordure)',
-        cursor: 'pointer',
-        fontSize: '0.78rem',
-        fontWeight: 600,
-        whiteSpace: 'nowrap',
-        boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-      }}
-    >
-      {label}
-    </button>
+    <button onClick={(e) => { e.stopPropagation(); onClick(); }} style={{
+      padding: '4px 10px', background: 'var(--couleur-primaire)', color: 'white',
+      border: 'none', borderRadius: 'var(--rayon-bordure)', cursor: 'pointer',
+      fontSize: '0.78rem', fontWeight: 600, whiteSpace: 'nowrap',
+      boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+    }}>{label}</button>
   );
 }
