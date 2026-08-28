@@ -88,17 +88,9 @@ export function FooterLegal() {
 
               <section>
                 <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
-                  Directeur de la publication
-                </h4>
-                <p>[Nom du directeur — à compléter]</p>
-              </section>
-
-              <section>
-                <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
                   Hébergement
                 </h4>
                 <p>[Hébergeur — à compléter]</p>
-                <p>[Adresse de l'hébergeur — à compléter]</p>
               </section>
 
               <section>

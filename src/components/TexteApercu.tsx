@@ -39,8 +39,10 @@ export function TexteApercu({
     return [{ texte, surbrillance: false, tag: undefined as string | undefined }];
   }, [texte, mapping, tagSurbrillance, valeurSurbrillance, surlignerTags, surlignerValeurs]);
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
     if (!onSelection) return;
+    // Ignorer les clics simples sur les spans (tags/valeurs)
+    if ((e.target as HTMLElement).tagName === 'SPAN') return;
     const selection = window.getSelection();
     const selected = selection?.toString().trim();
     if (selected && selected.length > 0) {
@@ -56,7 +58,7 @@ export function TexteApercu({
       <div
         ref={containerRef}
         onScroll={onScroll}
-        onMouseUp={surlignerValeurs ? handleMouseUp : undefined}
+        onMouseUp={onSelection ? handleMouseUp : undefined}
         style={{
           background: 'var(--couleur-surface)',
           border: '1px solid var(--couleur-bordure)',
