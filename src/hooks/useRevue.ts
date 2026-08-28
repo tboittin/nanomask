@@ -17,6 +17,7 @@ interface UseRevueReturn {
   tags: TagEntry[];
   textePseudonymise: string;
   tagSurbrillance: string | null;
+  valeurSurbrillance: string | null;
   conflits: Conflit[];
   ajouterValeur: (tag: string, valeur: string) => void;
   retirerValeur: (tag: string, valeur: string) => void;
@@ -24,6 +25,7 @@ interface UseRevueReturn {
   supprimerTag: (tag: string) => void;
   ajouterTag: (type: string, valeur: string) => void;
   mettreSurbrillance: (tag: string | null) => void;
+  mettreSurbrillanceValeur: (tag: string, valeur: string) => void;
   mappingFinal: Mapping;
   mappingModifie: boolean;
   reinitialiserMapping: () => void;
@@ -32,6 +34,7 @@ interface UseRevueReturn {
 export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRevueReturn {
   const [mapping, setMapping] = useState<Mapping>(() => ({ ...mappingInitial }));
   const [tagSurbrillance, setTagSurbrillance] = useState<string | null>(null);
+  const [valeurSurbrillance, setValeurSurbrillance] = useState<string | null>(null);
 
   const tags = useMemo<TagEntry[]>(() => {
     // Vérifier si le mapping initial contient déjà ces tags
@@ -132,7 +135,13 @@ export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRev
 
   const mettreSurbrillance = useCallback((tag: string | null) => {
     setTagSurbrillance(prev => prev === tag ? null : tag);
+    setValeurSurbrillance(null);
   }, []);
+
+  const mettreSurbrillanceValeur = useCallback((tag: string, valeur: string) => {
+    setTagSurbrillance(tag);
+    setValeurSurbrillance(valeur === valeurSurbrillance ? null : valeur);
+  }, [valeurSurbrillance]);
 
   const mappingModifie = useMemo(
     () => JSON.stringify(mapping) !== JSON.stringify(mappingInitial),
@@ -147,6 +156,7 @@ export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRev
     tags,
     textePseudonymise,
     tagSurbrillance,
+    valeurSurbrillance,
     conflits,
     ajouterValeur,
     retirerValeur,
@@ -154,6 +164,7 @@ export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRev
     supprimerTag,
     ajouterTag,
     mettreSurbrillance,
+    mettreSurbrillanceValeur,
     mappingFinal: mapping,
     mappingModifie,
     reinitialiserMapping,

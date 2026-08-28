@@ -1,14 +1,18 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 
 interface TexteApercuProps {
   titre: string;
   texte: string;
   mapping: Record<string, string[]>;
   tagSurbrillance?: string | null;
+  valeurSurbrillance?: string | null;
   surlignerTags?: boolean;
   surlignerValeurs?: boolean;
   containerRef?: React.Ref<HTMLDivElement>;
   onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
+  onTagClick?: (tag: string) => void;
+  onValeurClick?: (tag: string, valeur: string) => void;
+  onSelection?: (valeur: string) => void;
 }
 
 export function TexteApercu({
@@ -16,20 +20,33 @@ export function TexteApercu({
   texte,
   mapping,
   tagSurbrillance = null,
+  valeurSurbrillance = null,
   surlignerTags = false,
   surlignerValeurs = false,
   containerRef,
   onScroll,
+  onTagClick,
+  onValeurClick,
+  onSelection,
 }: TexteApercuProps) {
   const segments = useMemo(() => {
     if (surlignerTags) {
       return decouperTags(texte, tagSurbrillance);
     }
     if (surlignerValeurs) {
-      return decouperValeurs(texte, mapping, tagSurbrillance);
+      return decouperValeurs(texte, mapping, tagSurbrillance, valeurSurbrillance);
     }
-    return [{ texte, surbrillance: false }];
-  }, [texte, mapping, tagSurbrillance, surlignerTags, surlignerValeurs]);
+    return [{ texte, surbrillance: false, tag: undefined as string | undefined }];
+  }, [texte, mapping, tagSurbrillance, valeurSurbrillance, surlignerTags, surlignerValeurs]);
+
+  const handleMouseUp = useCallback(() => {
+    if (!onSelection) return;
+    const selection = window.getSelection();
+    const selected = selection?.toString().trim();
+    if (selected && selected.length > 0) {
+      onSelection(selected);
+    }
+  }, [onSelection]);
 
   return (
     <div>
@@ -39,6 +56,7 @@ export function TexteApercu({
       <div
         ref={containerRef}
         onScroll={onScroll}
+        onMouseUp={surlignerValeurs ? handleMouseUp : undefined}
         style={{
           background: 'var(--couleur-surface)',
           border: '1px solid var(--couleur-bordure)',
@@ -54,10 +72,16 @@ export function TexteApercu({
         {segments.map((seg, i) => (
           <span
             key={i}
+            onClick={seg.tag ? () => {
+              if (surlignerTags && onTagClick) onTagClick(seg.tag!);
+              if (surlignerValeurs && onValeurClick && seg.valeur) onValeurClick(seg.tag!, seg.valeur);
+            } : undefined}
             style={{
               backgroundColor: seg.surbrillance ? 'rgba(79, 70, 229, 0.2)' : 'transparent',
               borderRadius: '2px',
               fontFamily: surlignerTags ? 'var(--police-mono)' : 'inherit',
+              cursor: seg.tag ? 'pointer' : 'inherit',
+              transition: 'background-color 0.15s',
             }}
           >
             {seg.texte}
@@ -71,6 +95,8 @@ export function TexteApercu({
 interface Segment {
   texte: string;
   surbrillance: boolean;
+  tag?: string;
+  valeur?: string;
 }
 
 function decouperTags(
@@ -84,7 +110,7 @@ function decouperTags(
 
   for (const part of parts) {
     if (part === tagSurbrillance) {
-      segments.push({ texte: part, surbrillance: true });
+      segments.push({ texte: part, surbrillance: true, tag: part });
     } else {
       segments.push({ texte: part, surbrillance: false });
     }
@@ -97,14 +123,20 @@ function decouperValeurs(
   texte: string,
   mapping: Record<string, string[]>,
   tagSurbrillance: string | null,
+  valeurSurbrillance: string | null,
 ): Segment[] {
   if (!tagSurbrillance) return [{ texte, surbrillance: false }];
 
   const valeursSurbrillees = mapping[tagSurbrillance] || [];
   if (valeursSurbrillees.length === 0) return [{ texte, surbrillance: false }];
 
-  // Construire une regex avec toutes les valeurs
-  const pattern = valeursSurbrillees
+  // Si une valeur spécifique est demandée, ne surligner qu'elle
+  const valeursAFiltrer = valeurSurbrillance
+    ? valeursSurbrillees.filter(v => v === valeurSurbrillance)
+    : valeursSurbrillees;
+
+  // Construire une regex avec les valeurs à surligner
+  const pattern = valeursAFiltrer
     .map(v => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
     .join('|');
 
@@ -119,7 +151,12 @@ function decouperValeurs(
     if (match.index > lastIndex) {
       segments.push({ texte: texte.slice(lastIndex, match.index), surbrillance: false });
     }
-    segments.push({ texte: match[0], surbrillance: true });
+    segments.push({
+      texte: match[0],
+      surbrillance: true,
+      tag: tagSurbrillance,
+      valeur: valeurSurbrillance || match[0],
+    });
     lastIndex = regex.lastIndex;
   }
 
