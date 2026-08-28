@@ -34,6 +34,7 @@ function App() {
   const [etape, setEtape] = useState<Etape>('upload');
   const [mapping, setMapping] = useState<Mapping | null>(null);
   const [warningNom, setWarningNom] = useState<WarningDownload | null>(null);
+  const [analysePrete, setAnalysePrete] = useState(false);
 
   const handleFichierChoisi = useCallback(
     async (file: File) => { await uploader(file); },
@@ -45,14 +46,19 @@ function App() {
     [uploaderCle],
   );
 
-  // Quand le texte est extrait, lancer l'analyse et fusionner avec la clé existante
+  // Quand le texte est extrait, signaler que l'analyse est prête
   useEffect(() => {
     if (texte !== null) {
-      const detections = analyserTexte(texte);
-      const mappingGenere = fusionnerAvecMappingExistant(cle, detections);
-      setMapping(mappingGenere);
-      setEtape('revue');
+      setAnalysePrete(true);
     }
+  }, [texte]);
+
+  const handleLancerAnalyse = useCallback(() => {
+    if (texte === null) return;
+    const detections = analyserTexte(texte);
+    const mappingGenere = fusionnerAvecMappingExistant(cle, detections);
+    setMapping(mappingGenere);
+    setEtape('revue');
   }, [texte, cle]);
 
   const executerTelechargement = useCallback(
@@ -102,6 +108,7 @@ function App() {
     reinitialiser();
     setMapping(null);
     setEtape('upload');
+    setAnalysePrete(false);
   }, [reinitialiser]);
 
   return (
@@ -148,6 +155,7 @@ function App() {
                   reinitialiser();
                   setMapping(null);
                   setEtape('upload');
+                  setAnalysePrete(false);
                 }
               }}
               style={{
@@ -212,6 +220,26 @@ function App() {
                 libelle=".key.json"
               />
             </div>
+            {analysePrete && (
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <button
+                  onClick={handleLancerAnalyse}
+                  style={{
+                    padding: 'var(--espacement-sm) var(--espacement-lg)',
+                    background: 'var(--couleur-primaire)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 'var(--rayon-bordure)',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    marginTop: 'var(--espacement-sm)',
+                  }}
+                >
+                  Lancer l'analyse
+                </button>
+              </div>
+            )}
           </section>
         )}
 

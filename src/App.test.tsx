@@ -76,6 +76,12 @@ describe('App', () => {
     fireEvent.change(inputDocx, { target: { files: [creerFichier()] } });
 
     await waitFor(() => {
+      expect(screen.getByText('Lancer l\'analyse')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Lancer l\'analyse'));
+
+    await waitFor(() => {
       expect(screen.getByText(/Valider et télécharger/)).toBeInTheDocument();
     });
   });
@@ -98,6 +104,12 @@ describe('App', () => {
     // Charger le .docx (premier input)
     const inputDocx = inputs[0] as HTMLInputElement;
     fireEvent.change(inputDocx, { target: { files: [creerFichier()] } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Lancer l\'analyse')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Lancer l\'analyse'));
 
     await waitFor(() => {
       expect(screen.getByText(/Valider et télécharger/)).toBeInTheDocument();
@@ -130,6 +142,12 @@ describe('App', () => {
     fireEvent.change(inputs[0], { target: { files: [creerFichier('mon-rapport.docx')] } });
 
     await waitFor(() => {
+      expect(screen.getByText('Lancer l\'analyse')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Lancer l\'analyse'));
+
+    await waitFor(() => {
       expect(screen.getByText('Valider et télécharger')).toBeInTheDocument();
     });
 
@@ -159,6 +177,12 @@ describe('App', () => {
 
     const inputs = screen.getAllByTestId('input-fichier');
     fireEvent.change(inputs[0], { target: { files: [creerFichier('mon-rapport.docx')] } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Lancer l\'analyse')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Lancer l\'analyse'));
 
     await waitFor(() => {
       expect(screen.getByText('Valider et télécharger')).toBeInTheDocument();
