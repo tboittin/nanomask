@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { type Mapping, appliquerMapping } from '../utils/mapping';
 
 export interface TagEntry {
@@ -36,8 +36,15 @@ export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRev
   const [tagSurbrillance, setTagSurbrillance] = useState<string | null>(null);
   const [valeurSurbrillance, setValeurSurbrillance] = useState<string | null>(null);
 
+  // Auto-highlight le premier tag à l'ouverture
+  useEffect(() => {
+    if (!tagSurbrillance && Object.keys(mapping).length > 0) {
+      const premierTag = Object.keys(mapping)[0];
+      setTagSurbrillance(premierTag);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const tags = useMemo<TagEntry[]>(() => {
-    // Vérifier si le mapping initial contient déjà ces tags
     const tagsInitiaux = new Set(Object.keys(mappingInitial));
     return Object.entries(mapping).map(([tag, valeurs]) => ({
       tag,
@@ -125,7 +132,7 @@ export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRev
     setMapping(prev => {
       const tagsExistants = Object.keys(prev).filter(t => t.startsWith(`[${type}]`) || t.startsWith(`[${type}_`));
       const maxNum = tagsExistants.reduce((max, t) => {
-        const match = t.match(/_(\d+)\]$/);
+        const match = t.match(/_(\\d+)\\]$/);
         return match ? Math.max(max, parseInt(match[1])) : Math.max(max, 1);
       }, 0);
       const tag = maxNum === 0 ? `[${type}]` : `[${type}_${maxNum + 1}]`;

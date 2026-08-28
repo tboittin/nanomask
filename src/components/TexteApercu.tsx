@@ -36,13 +36,11 @@ export function TexteApercu({
     if (surlignerValeurs) {
       return decouperValeurs(texte, mapping, tagSurbrillance, valeurSurbrillance);
     }
-    return [{ texte, surbrillance: false, tag: undefined as string | undefined }];
+    return [{ texte, surbrillance: false, specifique: false, tag: undefined as string | undefined }];
   }, [texte, mapping, tagSurbrillance, valeurSurbrillance, surlignerTags, surlignerValeurs]);
 
-  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+  const handleMouseUp = useCallback(() => {
     if (!onSelection) return;
-    // Ignorer les clics simples sur les spans (tags/valeurs)
-    if ((e.target as HTMLElement).tagName === 'SPAN') return;
     const selection = window.getSelection();
     const selected = selection?.toString().trim();
     if (selected && selected.length > 0) {
@@ -79,7 +77,11 @@ export function TexteApercu({
               if (surlignerValeurs && onValeurClick && seg.valeur) onValeurClick(seg.tag!, seg.valeur);
             } : undefined}
             style={{
-              backgroundColor: seg.surbrillance ? 'rgba(79, 70, 229, 0.2)' : 'transparent',
+              backgroundColor: seg.specifique
+                ? 'rgba(79, 70, 229, 0.35)'
+                : seg.surbrillance
+                  ? 'rgba(79, 70, 229, 0.12)'
+                  : 'transparent',
               borderRadius: '2px',
               fontFamily: surlignerTags ? 'var(--police-mono)' : 'inherit',
               cursor: seg.tag ? 'pointer' : 'inherit',
@@ -97,6 +99,7 @@ export function TexteApercu({
 interface Segment {
   texte: string;
   surbrillance: boolean;
+  specifique?: boolean;
   tag?: string;
   valeur?: string;
 }
@@ -108,7 +111,8 @@ function decouperTags(
   if (!tagSurbrillance) return [{ texte, surbrillance: false }];
 
   const segments: Segment[] = [];
-  const parts = texte.split(new RegExp(`(${tagSurbrillance.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g'));
+  const escaped = tagSurbrillance.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const parts = texte.split(new RegExp(`(${escaped})`, 'g'));
 
   for (const part of parts) {
     if (part === tagSurbrillance) {
@@ -129,23 +133,22 @@ function decouperValeurs(
 ): Segment[] {
   if (!tagSurbrillance) return [{ texte, surbrillance: false }];
 
-  const valeursSurbrillees = mapping[tagSurbrillance] || [];
-  if (valeursSurbrillees.length === 0) return [{ texte, surbrillance: false }];
+  const toutesValeurs = mapping[tagSurbrillance] || [];
+  if (toutesValeurs.length === 0) return [{ texte, surbrillance: false }];
 
-  // Si une valeur spécifique est demandée, ne surligner qu'elle
-  const valeursAFiltrer = valeurSurbrillance
-    ? valeursSurbrillees.filter(v => v === valeurSurbrillance)
-    : valeursSurbrillees;
-
-  // Construire une regex avec les valeurs à surligner
-  const pattern = valeursAFiltrer
+  // On cherche dans tout le texte TOUTES les valeurs de ce tag
+  // pour les marquer en "surbrillance douce"
+  const tousPatterns = toutesValeurs
     .map(v => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
     .join('|');
 
-  if (!pattern) return [{ texte, surbrillance: false }];
+  if (!tousPatterns) return [{ texte, surbrillance: false }];
+
+  // Si une valeur spécifique est sélectionnée, on la surligne plus fort
+  const specifique = valeurSurbrillance || null;
 
   const segments: Segment[] = [];
-  const regex = new RegExp(`(${pattern})`, 'gi');
+  const regex = new RegExp(`(${tousPatterns})`, 'gi');
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
@@ -153,11 +156,14 @@ function decouperValeurs(
     if (match.index > lastIndex) {
       segments.push({ texte: texte.slice(lastIndex, match.index), surbrillance: false });
     }
+    const estSpecifique = specifique !== null &&
+      match[0].toLowerCase() === specifique.toLowerCase();
     segments.push({
       texte: match[0],
       surbrillance: true,
+      specifique: estSpecifique,
       tag: tagSurbrillance,
-      valeur: valeurSurbrillance || match[0],
+      valeur: match[0],
     });
     lastIndex = regex.lastIndex;
   }

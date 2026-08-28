@@ -53,9 +53,13 @@ describe('useRevue', () => {
 
   it('bascule la surbrillance', () => {
     const { result } = renderHook(() => useRevue(TEXTE, MAPPING_INITIAL));
-    act(() => result.current.mettreSurbrillance('[EMAIL]'));
+    // Auto-highlight active le premier tag à l'ouverture
     expect(result.current.tagSurbrillance).toBe('[EMAIL]');
+    // Cliquer à nouveau désactive
     act(() => result.current.mettreSurbrillance('[EMAIL]'));
     expect(result.current.tagSurbrillance).toBeNull();
+    // Cliquer réactive
+    act(() => result.current.mettreSurbrillance('[EMAIL]'));
+    expect(result.current.tagSurbrillance).toBe('[EMAIL]');
   });
 });
