@@ -1,10 +1,10 @@
-# AGENT.md — NanoMask
+# AGENT.md — Maskita
 
 Instructions pour l'agent travaillant sur ce projet.
 
 ## Contexte
 
-NanoMask est un outil de pseudonymisation de rapports de psychologue (.docx)
+Maskita est un outil de pseudonymisation de rapports de psychologue (.docx)
 **100% dans le navigateur**. Aucun serveur, aucune donnée sortante.
 
 Voir `Spec.md` pour l'architecture complète, `Readme.md` pour la présentation.
@@ -24,7 +24,7 @@ Voir `Spec.md` pour l'architecture complète, `Readme.md` pour la présentation.
 5. **Ne pas persister les données utilisateur** — pas de fichiers temporaires
    sur le serveur, pas de base de données. Tout en mémoire, tout est téléchargé
    explicitement par l'utilisateur.
-6. **Sécurité avant tout** — NanoMask est conçu pour que zéro donnée ne quitte
+6. **Sécurité avant tout** — Maskita est conçu pour que zéro donnée ne quitte
    la machine. Aucune décision d'architecture ne doit compromettre ce principe.
 
 ## Conventions

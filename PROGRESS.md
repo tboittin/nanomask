@@ -1,4 +1,4 @@
-# PROGRESS.md — NanoMask
+# PROGRESS.md — Maskita
 
 > Document de suivi du projet. Met à jour au fil de l'avancement.
 > Chaque phase se termine par une intégration dans App.tsx — le projet est **testable** à la fin de chaque phase (`pnpm dev`).
@@ -30,7 +30,7 @@ Après cette phase : `pnpm dev` affiche un titre + sous-titre.
 | 1.5 | Vérifier `tsc --noEmit` et `npm test` passent à vide | 🟢 | 2 tests passent, typecheck OK |
 | 1.6 | Créer la structure de dossiers | 🟢 | `src/` + sous-dossiers créés |
 
-**Testable :** ✅ `pnpm dev` → page "NanoMask"
+**Testable :** ✅ `pnpm dev` → page "Maskita"
 
 ---
 

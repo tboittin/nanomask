@@ -129,7 +129,7 @@ function App() {
       >
         <header style={{ textAlign: 'center' }}>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--couleur-texte)' }}>
-            NanoMask
+            Maskita
           </h1>
           <p style={{ color: 'var(--couleur-texte-secondaire)', marginTop: 'var(--espacement-xs)' }}>
             Pseudonymisation de documents — 100% dans le navigateur.

@@ -1,17 +1,17 @@
-# NanoMask
+# Maskita
 
-Pseudonymisation de rapports de psychologue (.docx) — **100% dans le navigateur.**
+Pseudonymisation de documents (.docx) — **100% dans le navigateur.**
 
 Aucun serveur, aucune installation Python ou LLM, aucune donnée qui quitte la machine.
 
-## Pourquoi NanoMask ?
+## Pourquoi Maskita ?
 
 Vous avez un rapport de psychologie contenant des données sensibles. Vous voulez utiliser un LLM (ChatGPT, Claude…) pour l'analyser, mais vous ne pouvez pas lui envoyer les données brutes.
 
-NanoMask **pseudonymise** le rapport dans votre navigateur : il vous permet de remplacer les noms, adresses, numéros et autres PII par des tags lisibles (`[PERSONNE]`, `[ADRESSE]`, `[TELEPHONE]`…). Vous pouvez alors envoyer le rapport pseudonymisé
+Maskita **pseudonymise** le rapport dans votre navigateur : il vous permet de remplacer les noms, adresses, numéros et autres PII par des tags lisibles (`[PERSONNE]`, `[ADRESSE]`, `[TELEPHONE]`…). Vous pouvez alors envoyer le rapport pseudonymisé
 à un LLM sans exposer les données réelles.
 
-Une fois le traitement terminé, NanoMask **restaure** le rapport modifié en remplaçant les tags par leurs valeurs d'origine.
+Une fois le traitement terminé, Maskita **restaure** le rapport modifié en remplaçant les tags par leurs valeurs d'origine.
 
 ## Démarrage
 

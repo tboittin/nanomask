@@ -37,7 +37,7 @@ describe('App', () => {
 
   it('affiche le titre et la description', () => {
     render(<App />);
-    expect(screen.getByText('NanoMask')).toBeInTheDocument();
+    expect(screen.getByText('Maskita')).toBeInTheDocument();
     expect(
       screen.getByText(/pseudonymisation.*100% dans le navigateur/i),
     ).toBeInTheDocument();

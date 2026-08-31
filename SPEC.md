@@ -1,4 +1,4 @@
-# NanoMask — Spec
+# Maskita — Spec
 
 Outil de pseudonymisation de rapports de psychologue (.docx) **100% côté navigateur**.
 Aucun serveur, aucune donnée sortante, aucune installation Python ou LLM.
@@ -8,7 +8,7 @@ Aucun serveur, aucune donnée sortante, aucune installation Python ou LLM.
 ## Pourquoi ?
 
 Les rapports de psychologie contiennent des données sensibles qui empêchent leur utilisation
-sur des LLM frontières (OpenAI, Claude, Gemini). NanoMask permet de :
+sur des LLM frontières (OpenAI, Claude, Gemini). Maskita permet de :
 
 1. **Pseudonymiser** le rapport : remplacer les données identifiantes par des tags lisibles
 2. **Traiter** le rapport pseudonymisé avec un LLM frontière
@@ -168,7 +168,7 @@ npm test
 - **Pas de LLM** : Pas de validation automatique.
 - **Pas de RAG** : pas d'exemples pour guider la détection.
 
-Ces limitations sont assumées : NanoMask privilégie la **sécurité maximale**
+Ces limitations sont assumées : Maskita privilégie la **sécurité maximale**
 (zéro donnée sortante) et la **simplicité** (un `npm install` suffit).
 
 ---
