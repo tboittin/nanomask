@@ -132,7 +132,7 @@ function App() {
             NanoMask
           </h1>
           <p style={{ color: 'var(--couleur-texte-secondaire)', marginTop: 'var(--espacement-xs)' }}>
-            Pseudonymisation de rapports de psychologue — 100% dans le navigateur.
+            Pseudonymisation de documents — 100% dans le navigateur.
           </p>
         </header>
 
